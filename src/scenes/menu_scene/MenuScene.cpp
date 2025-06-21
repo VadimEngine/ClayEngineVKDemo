@@ -1,10 +1,6 @@
-// third party
-// imgui
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
 // clay
 #include <clay/application/desktop/AppDesktop.h>
+#include <clay/gui/desktop/ImGuiComponentDesktop.h>
 // class
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/basic_scene/BasicScene.h"
@@ -13,8 +9,7 @@
 #include "scenes/galaxy/GalaxyScene.h"
 #include "scenes/games/GamesScene.h"
 
-
-MenuScene::MenuScene(clay::IApp& app): clay::BaseScene(app) {}
+MenuScene::MenuScene(clay::BaseApp& app): clay::BaseScene(app) {}
 
 MenuScene::~MenuScene() {}
 
@@ -25,15 +20,12 @@ void MenuScene::render(VkCommandBuffer cmdBuffer) {
 }
 
 void MenuScene::renderGUI(VkCommandBuffer cmdBuffer) {
-    ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    //----------------------
-    ImGui::NewFrame();
+    clay::ImGuiComponentDesktop::beginRender();
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(250, 480), ImGuiCond_FirstUseEver);
     ImGui::Begin("Menu", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
-    ImGui::Text("Clay EngineVK Sandbox");
+    ImGui::Text("Clay EngineVK Demo");
 
     if (ImGui::Button("Basic Scene")) {
         ((clay::AppDesktop&)mApp_).setScene(new BasicScene(((clay::AppDesktop&)mApp_)));
@@ -54,9 +46,8 @@ void MenuScene::renderGUI(VkCommandBuffer cmdBuffer) {
        ((clay::AppDesktop&)mApp_).quit();
     }
     ImGui::End();
-    //----------------------
-    ImGui::Render();
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer);
+
+    clay::ImGuiComponentDesktop::endRender(cmdBuffer);
 }
 
 void MenuScene::initialize() {

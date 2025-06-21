@@ -4,7 +4,7 @@
 
 class PhysicsScene : public clay::BaseScene {
 public:
-    PhysicsScene(clay::IApp& app);
+    PhysicsScene(clay::BaseApp& app);
 
     ~PhysicsScene();
 

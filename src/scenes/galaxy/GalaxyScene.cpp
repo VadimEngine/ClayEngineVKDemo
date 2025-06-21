@@ -9,7 +9,7 @@
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/galaxy/GalaxyScene.h"
 
-GalaxyScene::GalaxyScene(clay::IApp& app): clay::BaseScene(app) {}
+GalaxyScene::GalaxyScene(clay::BaseApp& app): clay::BaseScene(app) {}
 
 GalaxyScene::~GalaxyScene() {}
 

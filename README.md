@@ -1,5 +1,8 @@
 # Clay Engine Demo Desktop
-Clay Engine with Vulkan demo application for desktop platform
+
+Demo application of the ClayEngineVK static library (https://github.com/VadimEngine/ClayEngineVK) showcasing building a Desktop application. 
+
+![alt text](./ScreenShots/VKDesktopDemoGif.gif)
 
 # Load all submodules
 - `git submodule update --init --recursive`
@@ -9,7 +12,7 @@ Clay Engine with Vulkan demo application for desktop platform
 - `cmake --build ./build/`
 
 ### Run
-- `./build/Debug/Sandbox.exe`
+- `./build/Debug/ClayEngineVKDemo.exe`
 
 ### Compile shader
 - `C:/VulkanSDK/1.3.296.0/Bin/glslc.exe -fshader-stage=vert shader.vert -g -o vert.spv`

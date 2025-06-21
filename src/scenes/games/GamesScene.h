@@ -3,7 +3,7 @@
 
 class GamesScene : public clay::BaseScene {
 public:
-    GamesScene(clay::IApp& app);
+    GamesScene(clay::BaseApp& app);
 
     ~GamesScene();
 

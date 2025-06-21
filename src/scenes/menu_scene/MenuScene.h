@@ -4,7 +4,7 @@
 
 class MenuScene : public clay::BaseScene {
 public:
-    MenuScene(clay::IApp& app);
+    MenuScene(clay::BaseApp& app);
 
     ~MenuScene();
 

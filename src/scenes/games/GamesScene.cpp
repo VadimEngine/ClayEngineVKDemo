@@ -1,4 +1,3 @@
-
 // third party
 // imgui
 #include "imgui.h"
@@ -10,7 +9,7 @@
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/games/GamesScene.h"
 
-GamesScene::GamesScene(clay::IApp& app): clay::BaseScene(app) {}
+GamesScene::GamesScene(clay::BaseApp& app): clay::BaseScene(app) {}
 
 GamesScene::~GamesScene() {}
 

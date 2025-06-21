@@ -4,7 +4,7 @@
 
 class GalaxyScene : public clay::BaseScene {
 public:
-    GalaxyScene(clay::IApp& app);
+    GalaxyScene(clay::BaseApp& app);
 
     ~GalaxyScene();
 

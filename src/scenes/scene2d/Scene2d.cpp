@@ -9,7 +9,7 @@
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/scene2d/Scene2d.h"
 
-Scene2d::Scene2d(clay::IApp& app): clay::BaseScene(app) {}
+Scene2d::Scene2d(clay::BaseApp& app): clay::BaseScene(app) {}
 
 Scene2d::~Scene2d() {}
 

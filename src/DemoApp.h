@@ -4,7 +4,7 @@
 
 class DemoApp : public clay::AppDesktop {
 public:
-    DemoApp();
+    DemoApp(clay::Window& window);
 
     ~DemoApp();
 

@@ -3,7 +3,7 @@
 
 class Scene2d : public clay::BaseScene {
 public:
-    Scene2d(clay::IApp& app);
+    Scene2d(clay::BaseApp& app);
 
     ~Scene2d();
 

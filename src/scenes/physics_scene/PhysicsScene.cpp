@@ -9,7 +9,7 @@
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/physics_scene/PhysicsScene.h"
 
-PhysicsScene::PhysicsScene(clay::IApp& app): clay::BaseScene(app) {}
+PhysicsScene::PhysicsScene(clay::BaseApp& app): clay::BaseScene(app) {}
 
 PhysicsScene::~PhysicsScene() {}
 
