@@ -1,11 +1,14 @@
 # Clay Engine Demo Desktop
 
-Demo application of the ClayEngineVK static library (https://github.com/VadimEngine/ClayEngineVK) showcasing building a Desktop application. 
+Demo application of the ClayEngineVK static library (https://github.com/VadimEngine/ClayEngineVK) showcasing building a Desktop application. Builds and runs on Windows and Linux
 
 ![alt text](./ScreenShots/VKDesktopDemoGif.gif)
 
-# Load all submodules
+### Load all submodules
 - `git submodule update --init --recursive`
+
+### Compile Shaders
+- `./res/compile_shader.sh` 
 
 ### Build
 - `cmake -S . -B build`
