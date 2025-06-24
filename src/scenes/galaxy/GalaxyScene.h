@@ -1,7 +1,13 @@
 #pragma once
 // clay
 #include <clay/application/common/BaseScene.h>
+// project
+#include "scenes/galaxy/GalaxySceneGUI.h"
+#include "scenes/galaxy/MoonEntity.h"
 
+namespace galaxy {
+
+// TODO add a skybox
 class GalaxyScene : public clay::BaseScene {
 public:
     GalaxyScene(clay::BaseApp& app);
@@ -19,5 +25,9 @@ public:
     void destroyResources() override;
 
 private:
+    GalaxySceneGUI mGui_;
 
+    MoonEntity* moonEntity_ = nullptr;
 };
+
+} // namespace galaxy

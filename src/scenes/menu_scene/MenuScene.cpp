@@ -28,7 +28,7 @@ void MenuScene::renderGUI(VkCommandBuffer cmdBuffer) {
     ImGui::Text("Clay EngineVK Demo");
 
     if (ImGui::Button("Basic Scene")) {
-        ((clay::AppDesktop&)mApp_).setScene(new BasicScene(((clay::AppDesktop&)mApp_)));
+        ((clay::AppDesktop&)mApp_).setScene(new basic_scene::BasicScene(((clay::AppDesktop&)mApp_)));
     }
     if (ImGui::Button("Scene 2D")) {
         ((clay::AppDesktop&)mApp_).setScene(new Scene2d(mApp_));
@@ -37,7 +37,7 @@ void MenuScene::renderGUI(VkCommandBuffer cmdBuffer) {
         ((clay::AppDesktop&)mApp_).setScene(new PhysicsScene(mApp_));
     }
     if (ImGui::Button("Galaxy")) {
-        ((clay::AppDesktop&)mApp_).setScene(new GalaxyScene(mApp_));
+        ((clay::AppDesktop&)mApp_).setScene(new galaxy::GalaxyScene(mApp_));
     }
     if (ImGui::Button("Games")) {
         ((clay::AppDesktop&)mApp_).setScene(new GamesScene(mApp_));

@@ -1,5 +1,6 @@
 // clay
 #include <clay/utils/desktop/UtilsDesktop.h>
+#include <clay/graphics/common/ShaderModule.h>
 // project
 #include "scenes/menu_scene/MenuScene.h"
 // class
@@ -13,19 +14,37 @@ DemoApp::DemoApp(clay::Window& window)
 
 DemoApp::~DemoApp() {}
 
+// TODO backface culling to pipelines
 void DemoApp::loadResources() {
-    // shaders
-    auto textureVertexFileData = clay::utils::loadFileToMemory_desktop(
-        (clay::Resources::getResourcePath() / "shaders/Texture.vert.spv").string()
+    // Texture
+    clay::ShaderModule textureVertShader(
+        mpGraphicsContext_->getDevice(),
+        VK_SHADER_STAGE_VERTEX_BIT,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Texture.vert.spv").string()
+        )
     );
-    VkShaderModule textureVertexShader = mpGraphicsContext_->createShader(
-        {VK_SHADER_STAGE_VERTEX_BIT, textureVertexFileData.data.get(), textureVertexFileData.size}
+    clay::ShaderModule textureFragShader(
+        mpGraphicsContext_->getDevice(),
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Texture.frag.spv").string()
+        )
     );
-    auto textureFragmentFileData = clay::utils::loadFileToMemory_desktop(
-        (clay::Resources::getResourcePath() / "shaders/Texture.frag.spv").string()
+    // sprite
+    clay::ShaderModule spriteVertShader(
+        mpGraphicsContext_->getDevice(),
+        VK_SHADER_STAGE_VERTEX_BIT,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Sprite.vert.spv").string()
+        )
     );
-    VkShaderModule textureFragmentShader = mpGraphicsContext_->createShader(
-        {VK_SHADER_STAGE_FRAGMENT_BIT, textureFragmentFileData.data.get(), textureFragmentFileData.size}
+    clay::ShaderModule spriteFragShader(
+        mpGraphicsContext_->getDevice(),
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Sprite.frag.spv").string()
+        )
     );
 
     // Font
@@ -34,15 +53,24 @@ void DemoApp::loadResources() {
         auto fontData = clay::utils::loadFileToMemory_desktop(
             (clay::Resources::getResourcePath() / "fonts/runescape_uf.ttf").string()
         );
-        auto vertexData = clay::utils::loadFileToMemory_desktop(
-            (clay::Resources::getResourcePath() / "shaders/Text.vert.spv").string()
+
+        clay::ShaderModule fontVertShader(
+            mpGraphicsContext_->getDevice(),
+            VK_SHADER_STAGE_VERTEX_BIT,
+            clay::utils::loadFileToMemory_desktop(
+                (clay::Resources::getResourcePath() / "shaders/Text.vert.spv").string()
+            )
         );
-        auto fragmentData = clay::utils::loadFileToMemory_desktop(
-            (clay::Resources::getResourcePath() / "shaders/Text.frag.spv").string()
+        clay::ShaderModule fontFragShader(
+            mpGraphicsContext_->getDevice(),
+            VK_SHADER_STAGE_FRAGMENT_BIT,
+            clay::utils::loadFileToMemory_desktop(
+                (clay::Resources::getResourcePath() / "shaders/Text.frag.spv").string()
+            )
         );
 
         mResources_.addResource<clay::Font>(
-            std::make_unique<clay::Font>(*mpGraphicsContext_, fontData, vertexData, fragmentData, *mGraphicsContextDesktop_.mCameraUniform_),
+            std::make_unique<clay::Font>(*mpGraphicsContext_, fontData, fontVertShader, fontFragShader, *mGraphicsContextDesktop_.mCameraUniform_),
             "Runescape"
         );
     }
@@ -78,13 +106,15 @@ void DemoApp::loadResources() {
             "Default"
         );
     }
-    {
-        // sphere mesh
-        mResources_.loadResource<clay::Mesh>(
-            {(clay::Resources::getResourcePath() / "models/Sphere.obj").string()}, 
-            "Sphere"
-        );
-    }
+    // Meshes
+    // Sphere
+    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Sphere.obj").string()}, "Sphere");
+    // Plane
+    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Plane.obj").string()}, "Plane");
+    // Cube
+    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Cube.obj").string()}, "Cube");
+    // Torus
+    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Torus.obj").string()}, "Torus");
     // images
     {
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/V.png");
@@ -94,6 +124,15 @@ void DemoApp::loadResources() {
         pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
 
         mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "VTexture");
+    }
+    {
+        clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/Sprites.png");
+
+        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
+        pVTexture->initialize(imageData);
+        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+
+        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "SpriteSheet");
     }
     {
         // solid image
@@ -121,19 +160,8 @@ void DemoApp::loadResources() {
             .graphicsContext = *mpGraphicsContext_
         };
 
-        pipelineConfig.pipelineLayoutInfo.shaderStages = {
-            {
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .stage = VK_SHADER_STAGE_VERTEX_BIT,
-                .module = textureVertexShader,
-                .pName = "main"
-            },
-            {
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-                .module = textureFragmentShader,
-                .pName = "main"
-            }
+        pipelineConfig.pipelineLayoutInfo.shaders = {
+            &textureVertShader, &textureFragShader
         };
 
         auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
@@ -189,7 +217,70 @@ void DemoApp::loadResources() {
             std::make_unique<clay::PipelineResource>(pipelineConfig),
             "TextureDepth"
         );
+    }
+    {
+        // (SpriteSheet)
+        clay::PipelineResource::PipelineConfig pipelineConfig{
+            .graphicsContext = *mpGraphicsContext_
+        };
 
+        pipelineConfig.pipelineLayoutInfo.shaders = {
+            &spriteVertShader, &spriteFragShader
+        };
+
+        auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.end()};
+        pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
+
+        pipelineConfig.pipelineLayoutInfo.depthStencilState = {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+            .depthTestEnable = VK_TRUE,
+            .depthWriteEnable = VK_TRUE,
+            .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
+            .depthBoundsTestEnable = VK_FALSE,
+            .stencilTestEnable = VK_FALSE,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.rasterizerState = {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+            .depthClampEnable = VK_FALSE,
+            .rasterizerDiscardEnable = VK_FALSE,
+            .polygonMode = VK_POLYGON_MODE_FILL,
+            .cullMode = VK_CULL_MODE_NONE,
+            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            .depthBiasEnable = VK_FALSE,
+            .lineWidth = 1.0f,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.pushConstants = {
+            {
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                .offset = 0,
+                .size = sizeof(glm::mat4) + sizeof(glm::vec4) + sizeof(glm::vec4)
+            }
+        };
+
+        pipelineConfig.bindingLayoutInfo.bindings = {
+            {
+                .binding = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = 1,
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                .pImmutableSamplers = nullptr
+            },
+            {
+                .binding = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .pImmutableSamplers = nullptr
+            }
+        };
+
+        mResources_.addResource<clay::PipelineResource>(
+            std::make_unique<clay::PipelineResource>(pipelineConfig),
+            "SpriteSheet"
+        );
     }
     // Material
     {
@@ -251,6 +342,35 @@ void DemoApp::loadResources() {
             "VTexture"
         );
     }
+    {
+        // SpriteSheet
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("SpriteSheet")
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+            }
+        };
+        matConfig.imageBindings = {
+            {
+                .sampler = mResources_.getResource<clay::Texture>("SpriteSheet")->getSampler(),
+                .imageView = mResources_.getResource<clay::Texture>("SpriteSheet")->getImageView(),
+                .binding = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+            }
+        };
+
+        mResources_.addResource<clay::Material>(
+            std::make_unique<clay::Material>(matConfig),
+            "SpriteSheet"
+        );
+    }
     // Models
     {
         // Solid Sphere
@@ -260,7 +380,6 @@ void DemoApp::loadResources() {
             mResources_.getResource<clay::Material>("SolidTexture"),
             glm::mat4(1),
         });
-        
         mResources_.addResource<clay::Model>(std::move(pSolidSphereModel), "SolidSphere");
     }
     {
@@ -271,10 +390,26 @@ void DemoApp::loadResources() {
             mResources_.getResource<clay::Material>("VTexture"),
             glm::mat4(1),
         });
-
         mResources_.addResource<clay::Model>(std::move(pSolidSphereModel), "VTexture");
     }
-
-    vkDestroyShaderModule(mpGraphicsContext_->getDevice(), textureVertexShader, nullptr);
-    vkDestroyShaderModule(mpGraphicsContext_->getDevice(), textureFragmentShader, nullptr);
+    {
+        // Solid Plane
+        std::unique_ptr<clay::Model> pSolidSphereModel = std::make_unique<clay::Model>(*mpGraphicsContext_);
+        pSolidSphereModel->addElement({
+            mResources_.getResource<clay::Mesh>("Plane"),
+            mResources_.getResource<clay::Material>("SolidTexture"),
+            glm::mat4(1),
+        });
+        mResources_.addResource<clay::Model>(std::move(pSolidSphereModel), "SolidPlane");
+    }
+    {
+        // Solid Torus
+        std::unique_ptr<clay::Model> pSolidSphereModel = std::make_unique<clay::Model>(*mpGraphicsContext_);
+        pSolidSphereModel->addElement({
+            mResources_.getResource<clay::Mesh>("Torus"),
+            mResources_.getResource<clay::Material>("SolidTexture"),
+            glm::mat4(1),
+        });
+        mResources_.addResource<clay::Model>(std::move(pSolidSphereModel), "SolidTorus");
+    }
 }
