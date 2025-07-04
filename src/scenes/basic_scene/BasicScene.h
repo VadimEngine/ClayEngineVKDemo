@@ -1,6 +1,9 @@
 #pragma once
+// standard lib
+#include <set>
 // clay
 #include <clay/application/common/BaseScene.h>
+#include <clay/ecs/EntityManager.h>
 // project
 #include "scenes/basic_scene/BasicSceneGUI.h"
 
@@ -22,11 +25,15 @@ public:
 
     void destroyResources() override;
 
-    std::vector<std::unique_ptr<clay::Entity>>& getEntities();
+    std::set<clay::ecs::Entity>& getEntities();
 
 private:
     BasicSceneGUI mGui_;
-    std::vector<std::unique_ptr<clay::Entity>> mEntities_;
+    clay::ecs::Entity mTextureSphere_;
+    
+    std::set<clay::ecs::Entity> mECSEntities_;
+    clay::ecs::EntityManager mEntityManager_;
+
 };
 
 } // namespace basic_scene

@@ -1,8 +1,5 @@
 // clay
 #include <clay/application/desktop/AppDesktop.h>
-#include <clay/entity/render/ModelRenderable.h>
-#include <clay/entity/render/TextRenderable.h>
-#include <clay/entity/render/SpriteRenderable.h>
 // class
 #include "scenes/basic_scene/BasicScene.h"
 #include "scenes/menu_scene/MenuScene.h"
@@ -11,60 +8,99 @@ namespace basic_scene {
 
 BasicScene::BasicScene(clay::BaseApp& app)
     : clay::BaseScene(app),
+      mEntityManager_(mApp_.getResources()),
       mGui_(*this) {
     mCamera_.setPosition({0,1,5});
     const auto [frameWidth, frameHeight] = app.getGraphicsContext().getFrameDimensions();
     mCamera_.setAspectRatio(static_cast<float>(frameWidth) / static_cast<float>(frameHeight));
-    {   
+
+    {
         // solid sphere
-        clay::Entity* entity = new clay::Entity();
-        clay::ModelRenderable* modelRenderable = new clay::ModelRenderable(mApp_.getResources().getResource<clay::Model>("SolidSphere"));
-        entity->addRenderable(modelRenderable);
-        entity->setPosition({0,1,0});
-        mEntities_.emplace_back(entity);
-    }
-    {    
-        // texture sphere
-        clay::Entity* entity = new clay::Entity();
-        clay::ModelRenderable* modelRenderable2= new clay::ModelRenderable(mApp_.getResources().getResource<clay::Model>("VTexture"));
-        entity->addRenderable(modelRenderable2);
-        entity->setPosition({1,1,0});
-        mEntities_.emplace_back(entity);
-    }
-    {    
-        // text
-        clay::Entity* entity = new clay::Entity();
-        clay::TextRenderable* textRenderable = new clay::TextRenderable(mApp_.getGraphicsContext(), "HELLO WORLD", mApp_.getResources().getResource<clay::Font>("Runescape"));
-        textRenderable->setScale({.01f,.01f,.01f});
-        textRenderable->setColor({1,1,0,1});
-        entity->addRenderable(textRenderable);
-        mEntities_.emplace_back(entity);
-    }
-    {    
-        // Sprite
-        clay::Entity* entity = new clay::Entity();
-        clay::SpriteRenderable* spriteRenderable = new clay::SpriteRenderable(
-            mApp_.getResources().getResource<clay::Mesh>("Plane"), 
-            mApp_.getResources().getResource<clay::Material>("SpriteSheet"),
-            {0, 0, 16.0f / 512.0f , 16.0f / 512.0f }// TODO replace these magic numbers with Sprite Class
+        clay::ecs::Entity entity = mEntityManager_.createEntity();
+        mEntityManager_.addModelRenderable(
+            entity, 
+            { 
+                mApp_.getResources().mModelsPool_.getHandle("SolidSphere"),
+                {1,1,1,1}
+            }
         );
-        entity->addRenderable(spriteRenderable);
-        entity->setPosition({-1,1,0});
-        entity->setOrientation(glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-        mEntities_.emplace_back(entity);
+        clay::ecs::Transform transform;
+        transform.mPosition_ = {0, 1, 0};
+        mEntityManager_.addTransform(entity, transform);
+        mECSEntities_.insert(entity);
+    }
+
+    {
+        // Texture sphere
+        mTextureSphere_ = mEntityManager_.createEntity();
+        mEntityManager_.addModelRenderable(
+            mTextureSphere_, 
+            { 
+                mApp_.getResources().mModelsPool_.getHandle("VSphere"),
+                {1,1,1,1}
+            }
+        );
+        clay::ecs::Transform transform;
+        transform.mPosition_ = {1, 1, 0};
+        mEntityManager_.addTransform(mTextureSphere_, transform);
+        mECSEntities_.insert(mTextureSphere_);
+    }
+    {
+        // Text
+        clay::ecs::Entity entity = mEntityManager_.createEntity();
+
+        clay::ecs::TextRenderable text;
+        text.initialize(
+            mApp_.getGraphicsContext(),
+            "HELLO WORLD",
+            mApp_.getResources().getResource<clay::Font>("Runescape")
+        );
+        text.mScale_ = {.01f,.01f,.01f};
+        text.mColor_ = {1,1,0,1};
+        mEntityManager_.addTextRenderable(
+            entity, 
+            text
+        );
+        mEntityManager_.addTransform(entity, {});
+        mECSEntities_.insert(entity);
+    }
+
+    {
+        // sprite
+        clay::ecs::Entity entity = mEntityManager_.createEntity();
+
+        clay::ecs::SpriteRenderable sprite;
+        mEntityManager_.addSpriteRenderable(
+            entity, 
+            {
+                mApp_.getResources().getResource<clay::Mesh>("Plane"),
+                mApp_.getResources().getResource<clay::Material>("SpriteSheet"),
+                {0, 0, 16.0f / 512.0f, 16.0f / 512.0f},
+                {1,1,1,1}
+            }
+        );
+        clay::ecs::Transform transform;
+        transform.mPosition_ = {-1, 1, 0};
+        mEntityManager_.addTransform(entity, transform);
+        mECSEntities_.insert(entity);
     }
     {
         // floor
-        clay::Entity* entity = new clay::Entity();
-        clay::ModelRenderable* modelRenderable = new clay::ModelRenderable(
-            mApp_.getResources().getResource<clay::Model>("SolidPlane")
+        clay::ecs::Entity entity = mEntityManager_.createEntity();
+        mEntityManager_.addModelRenderable(
+            entity, 
+            { 
+                mApp_.getResources().mModelsPool_.getHandle("SolidPlane"),
+                {0.1f, 0.1f, 0.1f, 1.0f}
+            }
         );
-        modelRenderable->setColor({0.1f, 0.1f, 0.1f, 1.0f});
-        modelRenderable->setScale({10, 1, 10});
-        entity->addRenderable(modelRenderable);
-        mEntities_.emplace_back(entity);
+        clay::ecs::Transform transform;
+        transform.mPosition_ = {0, 0, 0};
+        transform.mScale_ = {10, 10, 1};
+        transform.mOrientation_ = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        mEntityManager_.addTransform(entity, transform);
+        mECSEntities_.insert(entity);
     }
-
 }
 
 BasicScene::~BasicScene() {}
@@ -116,7 +152,7 @@ void BasicScene::update(const float dt) {
        mCamera_.zoom(mCamera_.getZoomSpeed() * dt);
    }
 
-   mEntities_[1]->getOrientation() *= glm::angleAxis(glm::radians(60.0f * dt), glm::vec3(0.0f, 1.0f, 0.0f)); 
+   mEntityManager_.mTransforms[mTextureSphere_].mOrientation_ *= glm::angleAxis(glm::radians(60.0f * dt), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void BasicScene::render(VkCommandBuffer cmdBuffer) {
@@ -130,10 +166,7 @@ void BasicScene::render(VkCommandBuffer cmdBuffer) {
         sizeof(CameraConstant)
     );
 
-    for (int i = 0; i < mEntities_.size(); ++i) {
-        mEntities_[i]->render(cmdBuffer);
-    }
-
+    mEntityManager_.render(cmdBuffer);
     renderGUI(cmdBuffer);
 }
 
@@ -149,9 +182,8 @@ void BasicScene::destroyResources() {
 
 }
 
-std::vector<std::unique_ptr<clay::Entity>>& BasicScene::getEntities() {
-    return mEntities_;
+std::set<clay::ecs::Entity>& BasicScene::getEntities() {
+    return mECSEntities_;
 }
-
 
 } // namespace basic_scene

@@ -34,7 +34,7 @@ void MenuScene::renderGUI(VkCommandBuffer cmdBuffer) {
         ((clay::AppDesktop&)mApp_).setScene(new Scene2d(mApp_));
     }
     if (ImGui::Button("Physics Scene")) {
-        ((clay::AppDesktop&)mApp_).setScene(new PhysicsScene(mApp_));
+        ((clay::AppDesktop&)mApp_).setScene(new physics_scene::PhysicsScene(mApp_));
     }
     if (ImGui::Button("Galaxy")) {
         ((clay::AppDesktop&)mApp_).setScene(new galaxy::GalaxyScene(mApp_));

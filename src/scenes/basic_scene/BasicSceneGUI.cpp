@@ -31,7 +31,6 @@ void BasicSceneGUI::render(VkCommandBuffer cmdBuffer) {
     if (ImGui::Checkbox("vSync", &mVSyncEnabled_)) {
         ((clay::AppDesktop&)mScene_.getApp()).tempVSyncFlag = true;
         ((clay::AppDesktop&)mScene_.getApp()).tempVSyncValue= mVSyncEnabled_;
-    //     ((clay::WindowDesktop*)mScene_.getApp().getWindow())->setVSync(mVSyncEnabled_);
     }
     ImGui::Separator();
     // // Camera control
@@ -78,150 +77,149 @@ void BasicSceneGUI::cameraSection() {
 }
 
 void BasicSceneGUI::entitiesSection() {
-        ImGui::Text("Entities");
+    ImGui::Text("Entities");
 
     if (ImGui::BeginListBox("##Entities")) {
-        for (unsigned int i = 0; i < mScene_.getEntities().size(); ++i) {
-            std::string tempName = "Entity " + std::to_string(i);
-            if (ImGui::Selectable(tempName.c_str(), i == mSelectedEntityIndex_)) {
-                mSelectedEntityIndex_ = i;
+        for (const auto entity: mScene_.getEntities()) {
+            std::string tempName = "Entity " + std::to_string(entity);
+            if (ImGui::Selectable(tempName.c_str(), entity == mSelectedEntityIndex_)) {
+                mSelectedEntityIndex_ = entity;
             }
         }
         ImGui::EndListBox();
     }
 
-    if (mSelectedEntityIndex_ < mScene_.getEntities().size()) {
-        // Display selected Entity details/controls
-        clay::Entity* selectedEntity = mScene_.getEntities()[mSelectedEntityIndex_].get();
-        //mScene_.setHighLightEntity(selectedEntity);
+    // if (mSelectedEntityIndex_ < mScene_.getEntities().size()) {
+    //     // Display selected Entity details/controls
+    //     clay::Entity* selectedEntity = mScene_.getEntities()[mSelectedEntityIndex_].get();
+    //     //mScene_.setHighLightEntity(selectedEntity);
 
-        float entityPosition[3] = {
-            selectedEntity->getPosition().x,
-            selectedEntity->getPosition().y,
-            selectedEntity->getPosition().z
-        };
-        glm::quat& entityOrientation = selectedEntity->getOrientation();
-        glm::vec3 eulerAngles = glm::eulerAngles(entityOrientation);
-        float entityRotation[3] = {
-            eulerAngles.x,
-            eulerAngles.y,
-            eulerAngles.z
-        };
-        float entityScale[3] = {
-            selectedEntity->getScale().x,
-            selectedEntity->getScale().y,
-            selectedEntity->getScale().z
-        };
+    //     float entityPosition[3] = {
+    //         selectedEntity->getPosition().x,
+    //         selectedEntity->getPosition().y,
+    //         selectedEntity->getPosition().z
+    //     };
+    //     glm::quat& entityOrientation = selectedEntity->getOrientation();
+    //     glm::vec3 eulerAngles = glm::eulerAngles(entityOrientation);
+    //     float entityRotation[3] = {
+    //         eulerAngles.x,
+    //         eulerAngles.y,
+    //         eulerAngles.z
+    //     };
+    //     float entityScale[3] = {
+    //         selectedEntity->getScale().x,
+    //         selectedEntity->getScale().y,
+    //         selectedEntity->getScale().z
+    //     };
 
-        if (ImGui::SliderFloat3("Position##Entity", entityPosition, -10.f, 10.f, "%.2f")) {
-            selectedEntity->setPosition({
-                entityPosition[0],
-                entityPosition[1],
-                entityPosition[2]
-            });
-        }
+    //     if (ImGui::SliderFloat3("Position##Entity", entityPosition, -10.f, 10.f, "%.2f")) {
+    //         selectedEntity->setPosition({
+    //             entityPosition[0],
+    //             entityPosition[1],
+    //             entityPosition[2]
+    //         });
+    //     }
 
-        if (ImGui::SliderFloat3("Rotation##Entity", entityRotation, -10.f, 10.f, "%.2f")) {
-            selectedEntity->setOrientation( glm::quat(glm::vec3{
-                glm::radians(entityRotation[0]),
-                glm::radians(entityRotation[1]),
-                glm::radians(entityRotation[2])
-            }));
-        }
+    //     if (ImGui::SliderFloat3("Rotation##Entity", entityRotation, -10.f, 10.f, "%.2f")) {
+    //         selectedEntity->setOrientation( glm::quat(glm::vec3{
+    //             glm::radians(entityRotation[0]),
+    //             glm::radians(entityRotation[1]),
+    //             glm::radians(entityRotation[2])
+    //         }));
+    //     }
 
-        if (ImGui::SliderFloat3("Scale##Entity", entityScale, -10.f, 10.f, "%.2f")) {
-            selectedEntity->setScale({
-                entityScale[0],
-                entityScale[1],
-                entityScale[2]
-            });
-        }
+    //     if (ImGui::SliderFloat3("Scale##Entity", entityScale, -10.f, 10.f, "%.2f")) {
+    //         selectedEntity->setScale({
+    //             entityScale[0],
+    //             entityScale[1],
+    //             entityScale[2]
+    //         });
+    //     }
 
-        // List Renderable components for the selected Entity
-        ImGui::Text("Renderable Components");
+    //     // List Renderable components for the selected Entity
+    //     ImGui::Text("Renderable Components");
 
-        auto& renderables = selectedEntity->getRenderables();
+    //     auto& renderables = selectedEntity->getRenderables();
 
-        if (ImGui::BeginListBox("##Renderables")) {
-            for (unsigned int i = 0; i < renderables.size(); ++i) {
-                std::string tempName = "Renderable " + std::to_string(i);
-                if (ImGui::Selectable(tempName.c_str(), i == mSelectedRenderableIndex_)) {
-                    mSelectedRenderableIndex_ = i;
-                }
-            }
-            ImGui::EndListBox();
-        }
+    //     if (ImGui::BeginListBox("##Renderables")) {
+    //         for (unsigned int i = 0; i < renderables.size(); ++i) {
+    //             std::string tempName = "Renderable " + std::to_string(i);
+    //             if (ImGui::Selectable(tempName.c_str(), i == mSelectedRenderableIndex_)) {
+    //                 mSelectedRenderableIndex_ = i;
+    //             }
+    //         }
+    //         ImGui::EndListBox();
+    //     }
 
         
-        if (mSelectedRenderableIndex_ < renderables.size()) {
-            // Display selected Renderable details/controls
-            auto& selectedRenderable = renderables[mSelectedRenderableIndex_];
+    //     if (mSelectedRenderableIndex_ < renderables.size()) {
+    //         // Display selected Renderable details/controls
+    //         auto& selectedRenderable = renderables[mSelectedRenderableIndex_];
 
-            // float renderableColor[4] = {
-            //     selectedRenderable->getColor().r,
-            //     selectedRenderable->getColor().g,
-            //     selectedRenderable->getColor().b,
-            //     selectedRenderable->getColor().a
-            // };
-            float renderablePosition[3] = {
-                selectedRenderable->getPosition().x,
-                selectedRenderable->getPosition().y,
-                selectedRenderable->getPosition().z
-            };
-            glm::quat& renderableOrientation = selectedRenderable->getOrientation();
-            glm::vec3 eulerAngles = glm::eulerAngles(entityOrientation);
-            float renderableRotation[3] = {
-                eulerAngles.x,
-                eulerAngles.y,
-                eulerAngles.z
-            };
-            float renderableScale[3] = {
-                selectedRenderable->getScale().x,
-                selectedRenderable->getScale().y,
-                selectedRenderable->getScale().z
-            };
+    //         // float renderableColor[4] = {
+    //         //     selectedRenderable->getColor().r,
+    //         //     selectedRenderable->getColor().g,
+    //         //     selectedRenderable->getColor().b,
+    //         //     selectedRenderable->getColor().a
+    //         // };
+    //         float renderablePosition[3] = {
+    //             selectedRenderable->getPosition().x,
+    //             selectedRenderable->getPosition().y,
+    //             selectedRenderable->getPosition().z
+    //         };
+    //         glm::quat& renderableOrientation = selectedRenderable->getOrientation();
+    //         glm::vec3 eulerAngles = glm::eulerAngles(entityOrientation);
+    //         float renderableRotation[3] = {
+    //             eulerAngles.x,
+    //             eulerAngles.y,
+    //             eulerAngles.z
+    //         };
+    //         float renderableScale[3] = {
+    //             selectedRenderable->getScale().x,
+    //             selectedRenderable->getScale().y,
+    //             selectedRenderable->getScale().z
+    //         };
 
-            bool isEnabled = selectedRenderable->isEnabled();
+    //         bool isEnabled = selectedRenderable->isEnabled();
 
-            if (ImGui::Checkbox("Enabled", &isEnabled)) {
-                selectedRenderable->setEnabled(isEnabled);
-            }
+    //         if (ImGui::Checkbox("Enabled", &isEnabled)) {
+    //             selectedRenderable->setEnabled(isEnabled);
+    //         }
 
-            // if (ImGui::ColorEdit4("Color##Renderable", renderableColor)) {
-            //     selectedRenderable->setColor({
-            //         renderableColor[0],
-            //         renderableColor[1],
-            //         renderableColor[2],
-            //         renderableColor[3]
-            //     });
-            // }
+    //         // if (ImGui::ColorEdit4("Color##Renderable", renderableColor)) {
+    //         //     selectedRenderable->setColor({
+    //         //         renderableColor[0],
+    //         //         renderableColor[1],
+    //         //         renderableColor[2],
+    //         //         renderableColor[3]
+    //         //     });
+    //         // }
 
-            if (ImGui::SliderFloat3("Position##Renderable", renderablePosition, -10.f, 10.f, "%.2f")) {
-                selectedRenderable->setPosition({
-                    renderablePosition[0],
-                    renderablePosition[1],
-                    renderablePosition[2]
-                });
-            }
+    //         if (ImGui::SliderFloat3("Position##Renderable", renderablePosition, -10.f, 10.f, "%.2f")) {
+    //             selectedRenderable->setPosition({
+    //                 renderablePosition[0],
+    //                 renderablePosition[1],
+    //                 renderablePosition[2]
+    //             });
+    //         }
 
-            if (ImGui::SliderFloat3("Rotation##Renderable", renderableRotation, -10.f, 10.f, "%.2f")) {
-                selectedRenderable->setOrientation( glm::quat(glm::vec3{
-                    glm::radians(renderableRotation[0]),
-                    glm::radians(renderableRotation[1]),
-                    glm::radians(renderableRotation[2])
-                }));
-            }
+    //         if (ImGui::SliderFloat3("Rotation##Renderable", renderableRotation, -10.f, 10.f, "%.2f")) {
+    //             selectedRenderable->setOrientation( glm::quat(glm::vec3{
+    //                 glm::radians(renderableRotation[0]),
+    //                 glm::radians(renderableRotation[1]),
+    //                 glm::radians(renderableRotation[2])
+    //             }));
+    //         }
 
-            if (ImGui::SliderFloat3("Scale##Renderable", renderableScale, -10.f, 10.f, "%.2f")) {
-                selectedRenderable->setScale({
-                    renderableScale[0],
-                    renderableScale[1],
-                    renderableScale[2]
-                });
-            }
-        }
-        
-    }
+    //         if (ImGui::SliderFloat3("Scale##Renderable", renderableScale, -10.f, 10.f, "%.2f")) {
+    //             selectedRenderable->setScale({
+    //                 renderableScale[0],
+    //                 renderableScale[1],
+    //                 renderableScale[2]
+    //             });
+    //         }
+    //     }
+    // }
 }
 
 

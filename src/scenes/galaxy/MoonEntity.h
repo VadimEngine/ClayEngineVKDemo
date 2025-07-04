@@ -1,13 +1,14 @@
 
+#pragma once
+// clay
+#include <clay/ecs/EntityManager.h>
 #include <clay/application/common/BaseScene.h>
-#include <clay/entity/Entity.h>
-#include <clay/entity/render/ModelRenderable.h>
 
 namespace galaxy {
 
-class MoonEntity : public clay::Entity {
+class MoonEntity {
 public:
-    MoonEntity(clay::BaseScene& scene);
+    MoonEntity(clay::BaseScene& scene, clay::ecs::EntityManager& entityManager);
 
     ~MoonEntity();
 
@@ -23,11 +24,19 @@ public:
 
     void setRotationSpeed(float rotation);
 
+    void render(VkCommandBuffer cmdBuffer, clay::Resources& resources);
+
+    void setPosition(const glm::vec3& newPosition);
+
+    glm::vec3 getPosition() const;
+
 private:
+    clay::ecs::EntityManager& mEntityManager_;
+    clay::ecs::Entity mEntityId_;
+
     float mRadius_ = 0.25f;
     float mOrbitRadius_ = 1.f;
     float mRotationSpeed_ = 12.f;
-    clay::ModelRenderable* mpRenderable_ = nullptr;
 };
     
 } // namespace galaxy

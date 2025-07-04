@@ -6,8 +6,6 @@ namespace galaxy {
 class GalaxyScene;
 
 class GalaxySceneGUI {
-private:
-
 public:
     GalaxySceneGUI(GalaxyScene& scene);
 
@@ -16,7 +14,8 @@ public:
     void render(VkCommandBuffer cmdBuffer);
 
     GalaxyScene& mScene_;
+
+    bool mVSyncEnabled_ = false;
 };
 
-    
 } // namespace galaxy
