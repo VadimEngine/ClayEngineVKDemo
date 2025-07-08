@@ -12,7 +12,7 @@ SunEntity::SunEntity(clay::BaseScene& scene, clay::ecs::EntityManager& entityMan
     mEntityManager_.addTransform(mEntityId_, transform);
     clay::ecs::ModelRenderable modelRenderable;
     modelRenderable.mColor_ = {1,1,1,1};
-    modelRenderable.modelHandle = scene.getApp().getResources().mModelsPool_.getHandle("Sun");
+    modelRenderable.modelHandle = scene.getApp().getResources().getHandle<clay::Model>("Sun");
 
     // translation matrix
     glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), {0,0,0});

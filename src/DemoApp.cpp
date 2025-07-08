@@ -14,8 +14,6 @@ DemoApp::DemoApp(clay::Window& window)
 
 DemoApp::~DemoApp() {}
 
-// TODO backface culling to pipelines
-// TODO use the new resource system
 void DemoApp::loadResources() {
     // Texture
     clay::ShaderModule textureVertShader(
@@ -71,10 +69,38 @@ void DemoApp::loadResources() {
         );
 
         mResources_.addResource<clay::Font>(
-            std::make_unique<clay::Font>(*mpGraphicsContext_, fontData, fontVertShader, fontFragShader, *mGraphicsContextDesktop_.mCameraUniform_),
+            clay::Font(*mpGraphicsContext_, fontData, fontVertShader, fontFragShader, *mGraphicsContextDesktop_.mCameraUniform_),
             "Runescape"
         );
     }
+
+    clay::Resources::Handle<VkSampler> samplerHandle_Default;
+
+    clay::Resources::Handle<clay::Texture> textureHandle_VTexture;
+    clay::Resources::Handle<clay::Texture> textureHandle_SpriteSheet;
+    clay::Resources::Handle<clay::Texture> textureHandle_SolidTexture;
+    clay::Resources::Handle<clay::Texture> textureHandle_Sun;
+    clay::Resources::Handle<clay::Texture> textureHandle_Moon;
+    clay::Resources::Handle<clay::Texture> textureHandle_Earth;
+    clay::Resources::Handle<clay::Texture> textureHandle_Stars;
+
+    clay::Resources::Handle<clay::Mesh> meshHandler_Sphere;
+    clay::Resources::Handle<clay::Mesh> meshHandler_Plane;
+    clay::Resources::Handle<clay::Mesh> meshHandler_Cube;
+    clay::Resources::Handle<clay::Mesh> meshHandler_Torus;
+    clay::Resources::Handle<clay::Mesh> meshHandler_PlaneCircle;
+
+    clay::Resources::Handle<clay::PipelineResource> pipelineHandle_TextureDepth;
+    clay::Resources::Handle<clay::PipelineResource> pipelineHandle_TextureNoDepth;
+    clay::Resources::Handle<clay::PipelineResource> pipelineHandle_SpriteSheet;
+
+    clay::Resources::Handle<clay::Material> materialHandle_Solid;
+    clay::Resources::Handle<clay::Material> materialHandle_VTexture;
+    clay::Resources::Handle<clay::Material> materialHandle_SpriteSheet;
+    clay::Resources::Handle<clay::Material> materialHandle_Moon;
+    clay::Resources::Handle<clay::Material> materialHandle_Sun;
+    clay::Resources::Handle<clay::Material> materialHandle_Earth;
+    clay::Resources::Handle<clay::Material> materialHandle_Stars;
 
     // Sampler
     {
@@ -102,40 +128,38 @@ void DemoApp::loadResources() {
         if (vkCreateSampler(mpGraphicsContext_->getDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
         }
-        mResources_.addResource<VkSampler>(
-            std::make_unique<VkSampler>(sampler),
-            "Default"
-        );
+        // TODO confirm move is needed
+        samplerHandle_Default = mResources_.addResource(std::move(sampler), "Default");
     }
     // Meshes
     // Sphere
-    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Sphere.obj").string()}, "Sphere");
+    meshHandler_Sphere = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Sphere.obj").string()}, "Sphere");
     // Plane
-    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Plane.obj").string()}, "Plane");
+    meshHandler_Plane = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Plane.obj").string()}, "Plane");
     // Cube
-    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Cube.obj").string()}, "Cube");
+    meshHandler_Cube = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Cube.obj").string()}, "Cube");
     // Torus
-    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Torus.obj").string()}, "Torus");
+    meshHandler_Torus = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Torus.obj").string()}, "Torus");
     // Plane Circle
-    mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/PlaneCircle.obj").string()}, "PlaneCircle");
+    meshHandler_PlaneCircle = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/PlaneCircle.obj").string()}, "PlaneCircle");
     // images
     {
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/V.png");
 
-        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
-        pVTexture->initialize(imageData);
-        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture vTexture(*mpGraphicsContext_);
+        vTexture.initialize(imageData);
+        vTexture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "VTexture");
+        textureHandle_VTexture = mResources_.addResource(std::move(vTexture), "VTexture");
     }
     {
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/Sprites.png");
 
-        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
-        pVTexture->initialize(imageData);
-        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture texture(*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "SpriteSheet");
+        textureHandle_SpriteSheet = mResources_.addResource(std::move(texture), "SpriteSheet");
     }
     {
         // solid image
@@ -150,55 +174,55 @@ void DemoApp::loadResources() {
         singleRGBA.pixels[2] = 255;
         singleRGBA.pixels[3] = 255;
 
-        auto* pSolidTexture = new clay::Texture(*mpGraphicsContext_);
-        pSolidTexture->initialize(singleRGBA);
-        pSolidTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture solidTexture(*mpGraphicsContext_);
+        solidTexture.initialize(singleRGBA);
+        solidTexture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pSolidTexture), "SolidTexture");
+        textureHandle_SolidTexture = mResources_.addResource(std::move(solidTexture), "SolidTexture");
     }
     {
         // Sun
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/sunmap.jpg");
         clay::utils::convertRGBtoRGBA(imageData);
 
-        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
-        pVTexture->initialize(imageData);
-        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture texture(*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "Sun");
+        textureHandle_Sun = mResources_.addResource(std::move(texture), "Sun");
     }
     {
         // Moon
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/2k_moon.jpg");
         clay::utils::convertRGBtoRGBA(imageData);
 
-        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
-        pVTexture->initialize(imageData);
-        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture texture (*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "Moon");
+        textureHandle_Moon = mResources_.addResource(std::move(texture), "Moon");
     }
     {
         // Earth
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/earthmap1k.jpg");
         clay::utils::convertRGBtoRGBA(imageData);
 
-        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
-        pVTexture->initialize(imageData);
-        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture texture(*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "Earth");
+        textureHandle_Earth = mResources_.addResource(std::move(texture), "Earth");
     }
     {
         // Stars
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/8k_stars_milky_way.jpg");
         clay::utils::convertRGBtoRGBA(imageData);
 
-        auto* pVTexture = new clay::Texture(*mpGraphicsContext_);
-        pVTexture->initialize(imageData);
-        pVTexture->setSampler(*mResources_.getResource<VkSampler>("Default"));
+        clay::Texture texture(*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
 
-        mResources_.addResource(std::unique_ptr<clay::Texture>(pVTexture), "Stars");
+        textureHandle_Stars = mResources_.addResource(std::move(texture), "Stars");
     }
     // pipeline 
     {
@@ -260,8 +284,8 @@ void DemoApp::loadResources() {
             }
         };
 
-        mResources_.addResource<clay::PipelineResource>(
-            std::make_unique<clay::PipelineResource>(pipelineConfig),
+        pipelineHandle_TextureDepth = pipelineHandle_TextureDepth = mResources_.addResource<clay::PipelineResource>(
+            clay::PipelineResource(pipelineConfig),
             "TextureDepth"
         );
     }
@@ -324,8 +348,8 @@ void DemoApp::loadResources() {
             }
         };
 
-        mResources_.addResource<clay::PipelineResource>(
-            std::make_unique<clay::PipelineResource>(pipelineConfig),
+        pipelineHandle_SpriteSheet = mResources_.addResource<clay::PipelineResource>(
+            clay::PipelineResource(pipelineConfig),
             "SpriteSheet"
         );
     }
@@ -388,8 +412,8 @@ void DemoApp::loadResources() {
             }
         };
 
-        mResources_.addResource<clay::PipelineResource>(
-            std::make_unique<clay::PipelineResource>(pipelineConfig),
+        pipelineHandle_TextureNoDepth = mResources_.addResource<clay::PipelineResource>(
+            clay::PipelineResource(pipelineConfig),
             "TextureNoDepth"
         );
     }
@@ -398,7 +422,7 @@ void DemoApp::loadResources() {
         // Single White
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("TextureDepth")
+            .pipelineResource = mResources_[pipelineHandle_TextureDepth]
         };
 
         matConfig.bufferBindings = {
@@ -411,16 +435,16 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("SolidTexture")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("SolidTexture")->getImageView(),
+                .sampler = mResources_[textureHandle_SolidTexture].getSampler(),
+                .imageView = mResources_[textureHandle_SolidTexture].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_Solid = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "SolidTexture"
         );
     }
@@ -428,7 +452,7 @@ void DemoApp::loadResources() {
         // VTexture
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("TextureDepth")
+            .pipelineResource = mResources_[pipelineHandle_TextureDepth]
         };
 
         matConfig.bufferBindings = {
@@ -441,15 +465,15 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("VTexture")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("VTexture")->getImageView(),
+                .sampler = mResources_[textureHandle_VTexture].getSampler(),
+                .imageView = mResources_[textureHandle_VTexture].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_VTexture = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "VTexture"
         );
     }
@@ -457,7 +481,7 @@ void DemoApp::loadResources() {
         // SpriteSheet
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("SpriteSheet")
+            .pipelineResource = mResources_[pipelineHandle_SpriteSheet]
         };
 
         matConfig.bufferBindings = {
@@ -470,15 +494,15 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("SpriteSheet")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("SpriteSheet")->getImageView(),
+                .sampler = mResources_[textureHandle_SpriteSheet].getSampler(),
+                .imageView = mResources_[textureHandle_SpriteSheet].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_SpriteSheet = materialHandle_SpriteSheet = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "SpriteSheet"
         );
     }
@@ -486,7 +510,7 @@ void DemoApp::loadResources() {
         // Sun
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("TextureDepth")
+            .pipelineResource = mResources_[pipelineHandle_TextureDepth]
         };
 
         matConfig.bufferBindings = {
@@ -499,15 +523,15 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("Sun")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("Sun")->getImageView(),
+                .sampler = mResources_[textureHandle_Sun].getSampler(),
+                .imageView = mResources_[textureHandle_Sun].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_Sun = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "Sun"
         );
     }
@@ -515,7 +539,7 @@ void DemoApp::loadResources() {
         // Moon
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("TextureDepth")
+            .pipelineResource = mResources_[pipelineHandle_TextureDepth]
         };
 
         matConfig.bufferBindings = {
@@ -528,15 +552,15 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("Moon")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("Moon")->getImageView(),
+                .sampler = mResources_[textureHandle_Moon].getSampler(),
+                .imageView = mResources_[textureHandle_Moon].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_Moon = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "Moon"
         );
     }
@@ -544,7 +568,7 @@ void DemoApp::loadResources() {
         // Earth
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("TextureDepth")
+            .pipelineResource = mResources_[pipelineHandle_TextureDepth]
         };
 
         matConfig.bufferBindings = {
@@ -557,15 +581,15 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("Earth")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("Earth")->getImageView(),
+                .sampler = mResources_[textureHandle_Earth].getSampler(),
+                .imageView = mResources_[textureHandle_Earth].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_Earth = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "Earth"
         );
     }
@@ -573,7 +597,7 @@ void DemoApp::loadResources() {
         // Stars
         clay::Material::MaterialConfig matConfig {
             .graphicsContext = *mpGraphicsContext_,
-            .pipelineResource = *mResources_.getResource<clay::PipelineResource>("TextureNoDepth")
+            .pipelineResource = mResources_[pipelineHandle_TextureNoDepth]
         };
 
         matConfig.bufferBindings = {
@@ -586,15 +610,15 @@ void DemoApp::loadResources() {
         };
         matConfig.imageBindings = {
             {
-                .sampler = mResources_.getResource<clay::Texture>("Stars")->getSampler(),
-                .imageView = mResources_.getResource<clay::Texture>("Stars")->getImageView(),
+                .sampler = mResources_[textureHandle_Stars].getSampler(),
+                .imageView = mResources_[textureHandle_Stars].getImageView(),
                 .binding = 1,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
             }
         };
 
-        mResources_.addResource<clay::Material>(
-            std::make_unique<clay::Material>(matConfig),
+        materialHandle_Stars = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
             "Stars"
         );
     }
@@ -603,90 +627,90 @@ void DemoApp::loadResources() {
         // Solid Sphere
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Sphere"),
-            mResources_.getResource<clay::Material>("SolidTexture"),
+            &mResources_[meshHandler_Sphere],
+            &mResources_[materialHandle_Solid],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("SolidSphere", std::move(model));
+        mResources_.addResource(std::move(model), "SolidSphere");
     }
     {
         // V Texture Sphere
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Sphere"),
-            mResources_.getResource<clay::Material>("VTexture"),
+            &mResources_[meshHandler_Sphere],
+            &mResources_[materialHandle_VTexture],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("VSphere", std::move(model));
+        mResources_.addResource(std::move(model), "VSphere");
     }
     {
         // Solid Plane
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Plane"),
-            mResources_.getResource<clay::Material>("SolidTexture"),
+            &mResources_[meshHandler_Plane],
+            &mResources_[materialHandle_Solid],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("SolidPlane", std::move(model));
+        mResources_.addResource(std::move(model), "SolidPlane");
     }
     {
         // Solid Torus
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Torus"),
-            mResources_.getResource<clay::Material>("SolidTexture"),
+            &mResources_[meshHandler_Torus],
+            &mResources_[materialHandle_Solid],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("SolidTorus", std::move(model));
+        mResources_.addResource(std::move(model), "SolidTorus");
     }
     {
         // Sun
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Sphere"),
-            mResources_.getResource<clay::Material>("Sun"),
+            &mResources_[meshHandler_Sphere],
+            &mResources_[materialHandle_Sun],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("Sun", std::move(model));
+        mResources_.addResource(std::move(model), "Sun");
     }
     {
         // Moon
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Sphere"),
-            mResources_.getResource<clay::Material>("Moon"),
+            &mResources_[meshHandler_Sphere],
+            &mResources_[materialHandle_Moon],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("Moon", std::move(model));
+        mResources_.addResource(std::move(model), "Moon");
     }
     {
         // Earth
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Torus"),
-            mResources_.getResource<clay::Material>("Earth"),
+            &mResources_[meshHandler_Torus],
+            &mResources_[materialHandle_Earth],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("Earth", std::move(model));
+        mResources_.addResource(std::move(model), "Earth");
     }
     {
         // Solid Circle
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("PlaneCircle"),
-            mResources_.getResource<clay::Material>("SolidTexture"),
+            &mResources_[meshHandler_PlaneCircle],
+            &mResources_[materialHandle_Solid],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("SolidCircle", std::move(model));
+        mResources_.addResource(std::move(model), "SolidCircle");
     }
     {
         // Solid Plane
         clay::Model model(*mpGraphicsContext_);
         model.addElement({
-            mResources_.getResource<clay::Mesh>("Plane"),
-            mResources_.getResource<clay::Material>("SolidTexture"),
+            &mResources_[meshHandler_Plane],
+            &mResources_[materialHandle_Solid],
             glm::mat4(1),
         });
-        mResources_.mModelsPool_.add("SolidPlane", std::move(model));
+        mResources_.addResource(std::move(model), "SolidPlane");
     }
 }

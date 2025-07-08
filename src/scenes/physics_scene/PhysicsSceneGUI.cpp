@@ -109,7 +109,7 @@ void PhysicsSceneGUI::entitySection() {
         mScene_.getEntityManager().addModelRenderable(
             entity, 
             { 
-                mScene_.getApp().getResources().mModelsPool_.getHandle("SolidCircle"),
+                mScene_.getApp().getResources().getHandle<clay::Model>("SolidCircle"),
                 {1,1,1,1}
             }
         );

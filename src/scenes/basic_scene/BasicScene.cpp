@@ -8,7 +8,7 @@ namespace basic_scene {
 
 BasicScene::BasicScene(clay::BaseApp& app)
     : clay::BaseScene(app),
-      mEntityManager_(mApp_.getResources()),
+      mEntityManager_(app.getGraphicsContext(), app.getResources()),
       mGui_(*this) {
     mCamera_.setPosition({0,1,5});
     const auto [frameWidth, frameHeight] = app.getGraphicsContext().getFrameDimensions();
@@ -20,7 +20,7 @@ BasicScene::BasicScene(clay::BaseApp& app)
         mEntityManager_.addModelRenderable(
             entity, 
             { 
-                mApp_.getResources().mModelsPool_.getHandle("SolidSphere"),
+                mApp_.getResources().getHandle<clay::Model>("SolidSphere"),
                 {1,1,1,1}
             }
         );
@@ -36,7 +36,7 @@ BasicScene::BasicScene(clay::BaseApp& app)
         mEntityManager_.addModelRenderable(
             mTextureSphere_, 
             { 
-                mApp_.getResources().mModelsPool_.getHandle("VSphere"),
+                mApp_.getResources().getHandle<clay::Model>("VSphere"),
                 {1,1,1,1}
             }
         );
@@ -48,12 +48,11 @@ BasicScene::BasicScene(clay::BaseApp& app)
     {
         // Text
         clay::ecs::Entity entity = mEntityManager_.createEntity();
-
         clay::ecs::TextRenderable text;
         text.initialize(
             mApp_.getGraphicsContext(),
             "HELLO WORLD",
-            mApp_.getResources().getResource<clay::Font>("Runescape")
+            &mApp_.getResources()[mApp_.getResources().getHandle<clay::Font>("Runescape")]
         );
         text.mScale_ = {.01f,.01f,.01f};
         text.mColor_ = {1,1,0,1};
@@ -73,8 +72,8 @@ BasicScene::BasicScene(clay::BaseApp& app)
         mEntityManager_.addSpriteRenderable(
             entity, 
             {
-                mApp_.getResources().getResource<clay::Mesh>("Plane"),
-                mApp_.getResources().getResource<clay::Material>("SpriteSheet"),
+                &mApp_.getResources()[mApp_.getResources().getHandle<clay::Mesh>("Plane")],
+                &mApp_.getResources()[mApp_.getResources().getHandle<clay::Material>("SpriteSheet")],
                 {0, 0, 16.0f / 512.0f, 16.0f / 512.0f},
                 {1,1,1,1}
             }
@@ -90,7 +89,7 @@ BasicScene::BasicScene(clay::BaseApp& app)
         mEntityManager_.addModelRenderable(
             entity, 
             { 
-                mApp_.getResources().mModelsPool_.getHandle("SolidPlane"),
+                mApp_.getResources().getHandle<clay::Model>("SolidPlane"),
                 {0.1f, 0.1f, 0.1f, 1.0f}
             }
         );

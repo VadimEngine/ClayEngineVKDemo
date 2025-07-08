@@ -13,14 +13,14 @@ namespace galaxy {
 
 GalaxyScene::GalaxyScene(clay::BaseApp& app)
     : clay::BaseScene(app),
-      mEntityManager_(mApp_.getResources()),
+      mEntityManager_(app.getGraphicsContext(), app.getResources()),
       mGui_(*this) {
     getFocusCamera()->setPosition({0,1,10});
 
     // skybox
     mSkyBox_ = new clay::SkyBox(
-        *mApp_.getResources().getResource<clay::Mesh>("Sphere"),
-        *mApp_.getResources().getResource<clay::Material>("Stars")
+        mApp_.getResources()[mApp_.getResources().getHandle<clay::Mesh>("Sphere")],
+        mApp_.getResources()[mApp_.getResources().getHandle<clay::Material>("Stars")]
     );
 
     // sun

@@ -13,7 +13,7 @@ namespace physics_scene {
 
 PhysicsScene::PhysicsScene(clay::BaseApp& app)
     : clay::BaseScene(app),
-      mEntityManager_(mApp_.getResources()),
+      mEntityManager_(app.getGraphicsContext(), app.getResources()),
       mGui_(*this) {
     getFocusCamera()->setPosition({0,0,5});
     {
@@ -22,7 +22,7 @@ PhysicsScene::PhysicsScene(clay::BaseApp& app)
         mEntityManager_.addModelRenderable(
             entity, 
             { 
-                mApp_.getResources().mModelsPool_.getHandle("SolidCircle"),
+                mApp_.getResources().getHandle<clay::Model>("SolidCircle"),
                 {1,1,1,1}
             }
         );
@@ -40,7 +40,7 @@ PhysicsScene::PhysicsScene(clay::BaseApp& app)
         mEntityManager_.addModelRenderable(
             entity, 
             { 
-                mApp_.getResources().mModelsPool_.getHandle("SolidCircle"),
+                mApp_.getResources().getHandle<clay::Model>("SolidCircle"),
                 {1,1,1,1}
             }
         );
@@ -170,7 +170,7 @@ void PhysicsScene::handleAttractions(float dt) {
 
                     const float distance = glm::length(transfromA.mPosition_ - transfromB.mPosition_);
 
-                    const float epsilon = 1e-6;
+                    const float epsilon = 1e-6f;
 
                     if (abs(distance) > epsilon) {
                         glm::vec3 dir = glm::vec3(

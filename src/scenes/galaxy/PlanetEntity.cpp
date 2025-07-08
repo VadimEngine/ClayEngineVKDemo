@@ -11,7 +11,7 @@ PlanetEntity::PlanetEntity(clay::BaseScene& scene, clay::ecs::EntityManager& ent
     mEntityManager_.addTransform(mEntityId_, transform);
     clay::ecs::ModelRenderable modelRenderable;
     modelRenderable.mColor_ = {1,1,1,1};
-    modelRenderable.modelHandle = scene.getApp().getResources().mModelsPool_.getHandle("Earth");
+    modelRenderable.modelHandle = scene.getApp().getResources().getHandle<clay::Model>("Earth");
 
     // translation matrix
     glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), {0,0,0});
