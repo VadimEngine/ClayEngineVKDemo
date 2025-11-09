@@ -18,14 +18,14 @@ void DemoApp::loadResources() {
     // Texture
     clay::ShaderModule textureVertShader(
         mpGraphicsContext_->getDevice(),
-        VK_SHADER_STAGE_VERTEX_BIT,
+        vk::ShaderStageFlagBits::eVertex,
         clay::utils::loadFileToMemory_desktop(
             (clay::Resources::getResourcePath() / "shaders/Texture.vert.spv").string()
         )
     );
     clay::ShaderModule textureFragShader(
         mpGraphicsContext_->getDevice(),
-        VK_SHADER_STAGE_FRAGMENT_BIT,
+        vk::ShaderStageFlagBits::eFragment,
         clay::utils::loadFileToMemory_desktop(
             (clay::Resources::getResourcePath() / "shaders/Texture.frag.spv").string()
         )
@@ -33,14 +33,14 @@ void DemoApp::loadResources() {
     // sprite
     clay::ShaderModule spriteVertShader(
         mpGraphicsContext_->getDevice(),
-        VK_SHADER_STAGE_VERTEX_BIT,
+        vk::ShaderStageFlagBits::eVertex,
         clay::utils::loadFileToMemory_desktop(
             (clay::Resources::getResourcePath() / "shaders/Sprite.vert.spv").string()
         )
     );
     clay::ShaderModule spriteFragShader(
         mpGraphicsContext_->getDevice(),
-        VK_SHADER_STAGE_FRAGMENT_BIT,
+        vk::ShaderStageFlagBits::eFragment,
         clay::utils::loadFileToMemory_desktop(
             (clay::Resources::getResourcePath() / "shaders/Sprite.frag.spv").string()
         )
@@ -55,14 +55,14 @@ void DemoApp::loadResources() {
 
         clay::ShaderModule fontVertShader(
             mpGraphicsContext_->getDevice(),
-            VK_SHADER_STAGE_VERTEX_BIT,
+            vk::ShaderStageFlagBits::eVertex,
             clay::utils::loadFileToMemory_desktop(
                 (clay::Resources::getResourcePath() / "shaders/Text.vert.spv").string()
             )
         );
         clay::ShaderModule fontFragShader(
             mpGraphicsContext_->getDevice(),
-            VK_SHADER_STAGE_FRAGMENT_BIT,
+            vk::ShaderStageFlagBits::eFragment,
             clay::utils::loadFileToMemory_desktop(
                 (clay::Resources::getResourcePath() / "shaders/Text.frag.spv").string()
             )
@@ -74,7 +74,7 @@ void DemoApp::loadResources() {
         );
     }
 
-    clay::Resources::Handle<VkSampler> samplerHandle_Default;
+    clay::Resources::Handle<vk::Sampler> samplerHandle_Default;
 
     clay::Resources::Handle<clay::Texture> textureHandle_VTexture;
     clay::Resources::Handle<clay::Texture> textureHandle_SpriteSheet;
@@ -105,29 +105,27 @@ void DemoApp::loadResources() {
     // Sampler
     {
         // default sampler
-        VkSampler sampler;
+        vk::Sampler sampler;
 
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_NEAREST;
-        samplerInfo.minFilter = VK_FILTER_NEAREST;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        samplerInfo.anisotropyEnable = VK_FALSE;
-        samplerInfo.maxAnisotropy = 1;
-        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
-        samplerInfo.mipLodBias = 0.0f;
+        vk::SamplerCreateInfo samplerInfo{
+            .magFilter = vk::Filter::eNearest,
+            .minFilter = vk::Filter::eNearest,
+            .mipmapMode = vk::SamplerMipmapMode::eNearest,
+            .addressModeU = vk::SamplerAddressMode::eClampToBorder,
+            .addressModeV = vk::SamplerAddressMode::eClampToBorder,
+            .addressModeW = vk::SamplerAddressMode::eClampToBorder,
+            .mipLodBias = 0.0f,
+            .anisotropyEnable = vk::False,
+            .maxAnisotropy = 1.0f,
+            .compareEnable = vk::False,
+            .compareOp = vk::CompareOp::eAlways,
+            .minLod = 0.0f,
+            .maxLod = 0.0f,
+            .borderColor = vk::BorderColor::eFloatTransparentBlack,
+            .unnormalizedCoordinates = vk::False,
+        };
 
-        if (vkCreateSampler(mpGraphicsContext_->getDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create texture sampler!");
-        }
+        sampler = mpGraphicsContext_->getDevice().createSampler(samplerInfo);
         // TODO confirm move is needed
         samplerHandle_Default = mResources_.addResource(std::move(sampler), "Default");
     }
@@ -240,47 +238,45 @@ void DemoApp::loadResources() {
         pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
 
         pipelineConfig.pipelineLayoutInfo.depthStencilState = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-            .depthTestEnable = VK_TRUE,
-            .depthWriteEnable = VK_TRUE,
-            .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
-            .depthBoundsTestEnable = VK_FALSE,
-            .stencilTestEnable = VK_FALSE,
+            .depthTestEnable = vk::True,
+            .depthWriteEnable = vk::True,
+            .depthCompareOp = vk::CompareOp::eLessOrEqual,
+            .depthBoundsTestEnable = vk::False,
+            .stencilTestEnable = vk::False,
         };
 
         pipelineConfig.pipelineLayoutInfo.rasterizerState = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-            .depthClampEnable = VK_FALSE,
-            .rasterizerDiscardEnable = VK_FALSE,
-            .polygonMode = VK_POLYGON_MODE_FILL,
-            .cullMode = VK_CULL_MODE_BACK_BIT,
-            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-            .depthBiasEnable = VK_FALSE,
+            .depthClampEnable = vk::False,
+            .rasterizerDiscardEnable = vk::False,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eBack,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = vk::False,
             .lineWidth = 1.0f,
         };
 
         pipelineConfig.pipelineLayoutInfo.pushConstants = {
             {
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                .offset = 0,
-                .size = sizeof(glm::mat4) + sizeof(glm::vec4)
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                0,
+                sizeof(glm::mat4) + sizeof(glm::vec4)
             }
         };
 
         pipelineConfig.bindingLayoutInfo.bindings = {
             {
-                .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                .descriptorCount = 1,
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                .pImmutableSamplers = nullptr
+                0,
+                vk::DescriptorType::eUniformBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr
             },
             {
-                .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                .descriptorCount = 1,
-                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-                .pImmutableSamplers = nullptr
+                1,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                vk::ShaderStageFlagBits::eFragment,
+                nullptr
             }
         };
 
@@ -304,47 +300,45 @@ void DemoApp::loadResources() {
         pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
 
         pipelineConfig.pipelineLayoutInfo.depthStencilState = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-            .depthTestEnable = VK_TRUE,
-            .depthWriteEnable = VK_TRUE,
-            .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
-            .depthBoundsTestEnable = VK_FALSE,
-            .stencilTestEnable = VK_FALSE,
+            .depthTestEnable = vk::True,
+            .depthWriteEnable = vk::True,
+            .depthCompareOp =  vk::CompareOp::eLessOrEqual,
+            .depthBoundsTestEnable = vk::False,
+            .stencilTestEnable = vk::False,
         };
 
         pipelineConfig.pipelineLayoutInfo.rasterizerState = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-            .depthClampEnable = VK_FALSE,
-            .rasterizerDiscardEnable = VK_FALSE,
-            .polygonMode = VK_POLYGON_MODE_FILL,
-            .cullMode = VK_CULL_MODE_NONE,
-            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-            .depthBiasEnable = VK_FALSE,
+            .depthClampEnable = vk::False,
+            .rasterizerDiscardEnable = vk::False,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eNone,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = vk::False,
             .lineWidth = 1.0f,
         };
 
         pipelineConfig.pipelineLayoutInfo.pushConstants = {
             {
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                .offset = 0,
-                .size = sizeof(glm::mat4) + sizeof(glm::vec4) + sizeof(glm::vec4)
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                0,
+                sizeof(glm::mat4) + sizeof(glm::vec4) + sizeof(glm::vec4)
             }
         };
 
         pipelineConfig.bindingLayoutInfo.bindings = {
             {
-                .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                .descriptorCount = 1,
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                .pImmutableSamplers = nullptr
+                0,
+                vk::DescriptorType::eUniformBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr
             },
             {
-                .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                .descriptorCount = 1,
-                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-                .pImmutableSamplers = nullptr
+                1,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                vk::ShaderStageFlagBits::eFragment,
+                nullptr
             }
         };
 
@@ -368,47 +362,45 @@ void DemoApp::loadResources() {
         pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
 
         pipelineConfig.pipelineLayoutInfo.depthStencilState = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-            .depthTestEnable = VK_FALSE,
-            .depthWriteEnable = VK_FALSE,
-            .depthCompareOp = VK_COMPARE_OP_LESS,
-            .depthBoundsTestEnable = VK_FALSE,
-            .stencilTestEnable = VK_FALSE,
+            .depthTestEnable = vk::False,
+            .depthWriteEnable = vk::False,
+            .depthCompareOp = vk::CompareOp::eLess,
+            .depthBoundsTestEnable = vk::False,
+            .stencilTestEnable = vk::False,
         };
 
         pipelineConfig.pipelineLayoutInfo.rasterizerState = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-            .depthClampEnable = VK_FALSE,
-            .rasterizerDiscardEnable = VK_FALSE,
-            .polygonMode = VK_POLYGON_MODE_FILL,
-            .cullMode = VK_CULL_MODE_NONE,
-            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-            .depthBiasEnable = VK_FALSE,
+            .depthClampEnable = vk::False,
+            .rasterizerDiscardEnable = vk::False,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eNone,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = vk::False,
             .lineWidth = 1.0f,
         };
 
         pipelineConfig.pipelineLayoutInfo.pushConstants = {
             {
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                .offset = 0,
-                .size = sizeof(glm::mat4) + sizeof(glm::vec4)
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                0,
+                sizeof(glm::mat4) + sizeof(glm::vec4)
             }
         };
 
         pipelineConfig.bindingLayoutInfo.bindings = {
             {
-                .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                .descriptorCount = 1,
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                .pImmutableSamplers = nullptr
+                0,
+                vk::DescriptorType::eUniformBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr
             },
             {
-                .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                .descriptorCount = 1,
-                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-                .pImmutableSamplers = nullptr
+                1,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                vk::ShaderStageFlagBits::eFragment,
+                nullptr
             }
         };
 
@@ -430,7 +422,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -438,7 +430,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_SolidTexture].getSampler(),
                 .imageView = mResources_[textureHandle_SolidTexture].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 
@@ -460,7 +452,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -468,7 +460,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_VTexture].getSampler(),
                 .imageView = mResources_[textureHandle_VTexture].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 
@@ -489,7 +481,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -497,7 +489,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_SpriteSheet].getSampler(),
                 .imageView = mResources_[textureHandle_SpriteSheet].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 
@@ -518,7 +510,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -526,7 +518,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_Sun].getSampler(),
                 .imageView = mResources_[textureHandle_Sun].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 
@@ -547,7 +539,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -555,7 +547,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_Moon].getSampler(),
                 .imageView = mResources_[textureHandle_Moon].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 
@@ -576,7 +568,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -584,7 +576,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_Earth].getSampler(),
                 .imageView = mResources_[textureHandle_Earth].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 
@@ -605,7 +597,7 @@ void DemoApp::loadResources() {
                 .buffer = mGraphicsContextDesktop_.mCameraUniformHeadLocked_->mBuffer_,
                 .size = sizeof(clay::BaseScene::CameraConstant),
                 .binding = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                .descriptorType = vk::DescriptorType::eUniformBuffer
             }
         };
         matConfig.imageBindings = {
@@ -613,7 +605,7 @@ void DemoApp::loadResources() {
                 .sampler = mResources_[textureHandle_Stars].getSampler(),
                 .imageView = mResources_[textureHandle_Stars].getImageView(),
                 .binding = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
             }
         };
 

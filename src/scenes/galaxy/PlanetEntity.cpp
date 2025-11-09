@@ -54,7 +54,7 @@ void PlanetEntity::setRotationSpeed(float rotation) {
     mRotationSpeed_ = rotation;
 }
 
-void PlanetEntity::render(VkCommandBuffer cmdBuffer, clay::Resources& resources) {
+void PlanetEntity::render(vk::CommandBuffer cmdBuffer, clay::Resources& resources) {
 
 }
 

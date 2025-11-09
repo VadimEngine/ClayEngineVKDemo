@@ -144,7 +144,7 @@ const clay::InputHandlerDesktop& inputHandler = (((clay::AppDesktop&)mApp_).getW
     }
 }
 
-void GalaxyScene::render(VkCommandBuffer cmdBuffer) {
+void GalaxyScene::render(vk::CommandBuffer cmdBuffer) {
 
     {
         clay::BaseScene::CameraConstant ubo{};
@@ -172,7 +172,7 @@ void GalaxyScene::render(VkCommandBuffer cmdBuffer) {
     renderGUI(cmdBuffer);
 }
 
-void GalaxyScene::renderGUI(VkCommandBuffer cmdBuffer) {
+void GalaxyScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     mGui_.render(cmdBuffer);
 }
 

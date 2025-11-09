@@ -15,11 +15,11 @@ Scene2d::~Scene2d() {}
 
 void Scene2d::update(const float dt) {}
 
-void Scene2d::render(VkCommandBuffer cmdBuffer) {
+void Scene2d::render(vk::CommandBuffer cmdBuffer) {
     renderGUI(cmdBuffer);
 }
 
-void Scene2d::renderGUI(VkCommandBuffer cmdBuffer) {
+void Scene2d::renderGUI(vk::CommandBuffer cmdBuffer) {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     //----------------------

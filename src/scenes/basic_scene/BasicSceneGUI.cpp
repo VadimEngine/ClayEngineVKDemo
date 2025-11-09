@@ -15,7 +15,7 @@ BasicSceneGUI::BasicSceneGUI(BasicScene& scene)
 
 BasicSceneGUI::~BasicSceneGUI() {}
 
-void BasicSceneGUI::render(VkCommandBuffer cmdBuffer) {
+void BasicSceneGUI::render(vk::CommandBuffer cmdBuffer) {
     clay::ImGuiComponentDesktop::beginRender();
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));

@@ -229,7 +229,7 @@ std::optional<glm::vec3> PhysicsScene::getCollisionMVT(const clay::ecs::Entity& 
     }
 }
 
-void PhysicsScene::render(VkCommandBuffer cmdBuffer) {
+void PhysicsScene::render(vk::CommandBuffer cmdBuffer) {
     clay::BaseScene::CameraConstant ubo{};
     ubo.view = mCamera_.getViewMatrix();
     ubo.proj = mCamera_.getProjectionMatrix();
@@ -243,7 +243,7 @@ void PhysicsScene::render(VkCommandBuffer cmdBuffer) {
     renderGUI(cmdBuffer);
 }
 
-void PhysicsScene::renderGUI(VkCommandBuffer cmdBuffer) {
+void PhysicsScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     mGui_.render(cmdBuffer);
 }
 

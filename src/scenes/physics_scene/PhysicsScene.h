@@ -30,9 +30,9 @@ public:
     
     std::optional<glm::vec3> getCollisionMVT(const clay::ecs::Entity& EntityA, const clay::ecs::Entity& EntityB);
 
-    void render(VkCommandBuffer cmdBuffer) override;
+    void render(vk::CommandBuffer cmdBuffer) override;
 
-    void renderGUI(VkCommandBuffer cmdBuffer) override;
+    void renderGUI(vk::CommandBuffer cmdBuffer) override;
 
     void initialize() override;
 
