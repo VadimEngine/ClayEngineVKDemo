@@ -15,7 +15,7 @@ PhysicsSceneGUI::PhysicsSceneGUI(PhysicsScene& scene)
 
 PhysicsSceneGUI::~PhysicsSceneGUI() {}
 
-void PhysicsSceneGUI::render(VkCommandBuffer cmdBuffer) {
+void PhysicsSceneGUI::render(vk::CommandBuffer cmdBuffer) {
     clay::ImGuiComponentDesktop::beginRender();
     
     ImGui::SetNextWindowPos(ImVec2(0, 0));

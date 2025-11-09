@@ -24,7 +24,7 @@ public:
 
     void setRotationSpeed(float rotation);
 
-    void render(VkCommandBuffer cmdBuffer, clay::Resources& resources);
+    void render(vk::CommandBuffer cmdBuffer, clay::Resources& resources);
 
     void setPosition(const glm::vec3& newPosition);
 

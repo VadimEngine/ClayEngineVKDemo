@@ -15,11 +15,11 @@ GamesScene::~GamesScene() {}
 
 void GamesScene::update(const float dt) {}
 
-void GamesScene::render(VkCommandBuffer cmdBuffer) {
+void GamesScene::render(vk::CommandBuffer cmdBuffer) {
     renderGUI(cmdBuffer);
 }
 
-void GamesScene::renderGUI(VkCommandBuffer cmdBuffer) {
+void GamesScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     //----------------------

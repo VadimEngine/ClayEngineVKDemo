@@ -53,22 +53,7 @@ void MoonEntity::setRotationSpeed(float rotation) {
     mRotationSpeed_ = rotation;
 }
 
-void MoonEntity::render(VkCommandBuffer cmdBuffer, clay::Resources& resources) {
-    // clay::ecs::Transform& transform = mEntityManager_.mTransforms[mEntityId_];
-    // clay::ecs::ModelRenderable& model = mEntityManager_.mModelRenderable[mEntityId_];
-
-    // glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), transform.mPosition_);
-    // const glm::mat4 rotationMatrix = glm::mat4_cast(transform.mOrientation_);
-    // glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), transform.mScale_);
-
-    // struct PushConstants {
-    //     glm::mat4 model;
-    //     glm::vec4 color; // optional depending on material
-    // } push;
-    // push.model = translationMat * rotationMatrix * scaleMat * model.localModelMat;
-    // push.color = model.mColor_;
-
-    // model.mModel_->render(cmdBuffer, &push, sizeof(push));
+void MoonEntity::render(vk::CommandBuffer cmdBuffer, clay::Resources& resources) {
 }
 
 void MoonEntity::setPosition(const glm::vec3& newPosition) {

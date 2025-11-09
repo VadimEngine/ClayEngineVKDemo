@@ -15,7 +15,7 @@ GalaxySceneGUI::GalaxySceneGUI(GalaxyScene& scene)
 
 GalaxySceneGUI::~GalaxySceneGUI() {}
 
-void GalaxySceneGUI::render(VkCommandBuffer cmdBuffer) {
+void GalaxySceneGUI::render(vk::CommandBuffer cmdBuffer) {
     clay::ImGuiComponentDesktop::beginRender();
     
     ImGui::SetNextWindowPos(ImVec2(0, 0));

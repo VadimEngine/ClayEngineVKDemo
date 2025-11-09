@@ -11,7 +11,7 @@ public:
 
     ~GalaxySceneGUI();
 
-    void render(VkCommandBuffer cmdBuffer);
+    void render(vk::CommandBuffer cmdBuffer);
 
     GalaxyScene& mScene_;
 

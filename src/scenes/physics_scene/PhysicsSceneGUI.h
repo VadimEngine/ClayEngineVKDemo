@@ -11,7 +11,7 @@ public:
 
     ~PhysicsSceneGUI();
 
-    void render(VkCommandBuffer cmdBuffer);
+    void render(vk::CommandBuffer cmdBuffer);
 
     void entitySection();
 

@@ -154,7 +154,7 @@ void BasicScene::update(const float dt) {
    mEntityManager_.mTransforms[mTextureSphere_].mOrientation_ *= glm::angleAxis(glm::radians(60.0f * dt), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-void BasicScene::render(VkCommandBuffer cmdBuffer) {
+void BasicScene::render(vk::CommandBuffer cmdBuffer) {
     // update camera // TODO maybe have a camera.bind() method?
     clay::BaseScene::CameraConstant ubo{};
     ubo.view = mCamera_.getViewMatrix();
@@ -169,7 +169,7 @@ void BasicScene::render(VkCommandBuffer cmdBuffer) {
     renderGUI(cmdBuffer);
 }
 
-void BasicScene::renderGUI(VkCommandBuffer cmdBuffer) {
+void BasicScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     mGui_.render(cmdBuffer);
 }
 

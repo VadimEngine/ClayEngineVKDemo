@@ -53,7 +53,7 @@ void SunEntity::setRotationSpeed(float rotation) {
     mRotationSpeed_ = rotation;
 }
 
-void SunEntity::render(VkCommandBuffer cmdBuffer, clay::Resources& resources) {}
+void SunEntity::render(vk::CommandBuffer cmdBuffer, clay::Resources& resources) {}
 
 void SunEntity::setPosition(const glm::vec3& newPosition) {
     mEntityManager_.mTransforms[mEntityId_].mPosition_ = newPosition;

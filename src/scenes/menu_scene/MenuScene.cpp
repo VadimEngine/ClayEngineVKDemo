@@ -15,11 +15,11 @@ MenuScene::~MenuScene() {}
 
 void MenuScene::update(const float dt) {}
 
-void MenuScene::render(VkCommandBuffer cmdBuffer) {
+void MenuScene::render(vk::CommandBuffer cmdBuffer) {
     renderGUI(cmdBuffer);
 }
 
-void MenuScene::renderGUI(VkCommandBuffer cmdBuffer) {
+void MenuScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     clay::ImGuiComponentDesktop::beginRender();
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));

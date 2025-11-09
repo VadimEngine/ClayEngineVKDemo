@@ -21,9 +21,9 @@ public:
 
     void update(const float dt) override;
 
-    void render(VkCommandBuffer cmdBuffer) override;
+    void render(vk::CommandBuffer cmdBuffer) override;
 
-    void renderGUI(VkCommandBuffer cmdBuffer) override;
+    void renderGUI(vk::CommandBuffer cmdBuffer) override;
 
     void initialize() override;
 

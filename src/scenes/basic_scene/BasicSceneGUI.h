@@ -11,7 +11,7 @@ public:
 
     ~BasicSceneGUI();
 
-    void render(VkCommandBuffer cmdBuffer);
+    void render(vk::CommandBuffer cmdBuffer);
 
     void cameraSection();
 
