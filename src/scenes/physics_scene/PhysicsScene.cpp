@@ -30,7 +30,7 @@ PhysicsScene::PhysicsScene(clay::BaseApp& app)
         mEntityManager_.addTransform(entity, {});
         mEntityManager_.addCollider(entity, {});
         clay::ecs::RigidBody rigidBody{};
-        rigidBody.attractive = true;
+        //rigidBody.attractive = true;
         mEntityManager_.addRigidBody(entity, rigidBody);
         mEntities_.insert(entity);
     }
@@ -50,7 +50,7 @@ PhysicsScene::PhysicsScene(clay::BaseApp& app)
         mEntityManager_.addTransform(entity, transform);
         mEntityManager_.addCollider(entity, {});
         clay::ecs::RigidBody rigidBody{};
-        rigidBody.attractive = true;
+        //rigidBody.attractive = true;
         mEntityManager_.addRigidBody(entity, rigidBody);
         mEntities_.insert(entity);
     }
@@ -108,7 +108,7 @@ void PhysicsScene::update(const float dt) {
     for (clay::ecs::Entity e: mEntities_) {
         if (mEntityManager_.mSignatures[e][clay::ecs::ComponentType::RIGID_BODY]) {
             // assume there is a transform
-            mEntityManager_.mTransforms[e].mPosition_ += mEntityManager_.mRigidBodies[e].velocity;
+            //mEntityManager_.mTransforms[e].mPosition_ += mEntityManager_.mRigidBodies[e].velocity;
         }
     }
 
@@ -143,8 +143,8 @@ void PhysicsScene::handleOverlap() {
                         clay::ecs::RigidBody& rigidBodyA = mEntityManager_.mRigidBodies[entityA];
                         clay::ecs::RigidBody& rigidBodyB = mEntityManager_.mRigidBodies[entityB];
 
-                        rigidBodyA.velocity = glm::reflect(rigidBodyA.velocity, glm::normalize(-norm));
-                        rigidBodyB.velocity = glm::reflect(rigidBodyB.velocity, glm::normalize(-norm));
+                        // rigidBodyA.velocity = glm::reflect(rigidBodyA.velocity, glm::normalize(-norm));
+                        // rigidBodyB.velocity = glm::reflect(rigidBodyB.velocity, glm::normalize(-norm));
                     }
                 }
             }
@@ -153,40 +153,40 @@ void PhysicsScene::handleOverlap() {
 }
 
 void PhysicsScene::handleAttractions(float dt) {
-    for (auto it1 = mEntities_.begin(); it1 != mEntities_.end(); ++it1) {
-        clay::ecs::Entity entityA = *it1;
-        if (mEntityManager_.mSignatures[entityA][clay::ecs::ComponentType::RIGID_BODY] && mEntityManager_.mRigidBodies[entityA].attractive) {
-            auto it2 = it1;
-            ++it2;
+    // for (auto it1 = mEntities_.begin(); it1 != mEntities_.end(); ++it1) {
+    //     clay::ecs::Entity entityA = *it1;
+    //     if (mEntityManager_.mSignatures[entityA][clay::ecs::ComponentType::RIGID_BODY] && mEntityManager_.mRigidBodies[entityA].attractive) {
+    //         auto it2 = it1;
+    //         ++it2;
 
-            for (; it2 != mEntities_.end(); ++it2) {
-                clay::ecs::Entity entityB = *it2;
-                if (mEntityManager_.mSignatures[entityB][clay::ecs::ComponentType::RIGID_BODY] && mEntityManager_.mRigidBodies[entityB].attractive) {
-                    clay::ecs::Transform& transfromA = mEntityManager_.mTransforms[entityA];
-                    clay::ecs::Transform& transfromB = mEntityManager_.mTransforms[entityB];
+    //         for (; it2 != mEntities_.end(); ++it2) {
+    //             clay::ecs::Entity entityB = *it2;
+    //             if (mEntityManager_.mSignatures[entityB][clay::ecs::ComponentType::RIGID_BODY] && mEntityManager_.mRigidBodies[entityB].attractive) {
+    //                 clay::ecs::Transform& transfromA = mEntityManager_.mTransforms[entityA];
+    //                 clay::ecs::Transform& transfromB = mEntityManager_.mTransforms[entityB];
 
-                    clay::ecs::RigidBody& rigidBodyA = mEntityManager_.mRigidBodies[entityA];
-                    clay::ecs::RigidBody& rigidBodyB = mEntityManager_.mRigidBodies[entityB];
+    //                 clay::ecs::RigidBody& rigidBodyA = mEntityManager_.mRigidBodies[entityA];
+    //                 clay::ecs::RigidBody& rigidBodyB = mEntityManager_.mRigidBodies[entityB];
 
-                    const float distance = glm::length(transfromA.mPosition_ - transfromB.mPosition_);
+    //                 const float distance = glm::length(transfromA.mPosition_ - transfromB.mPosition_);
 
-                    const float epsilon = 1e-6f;
+    //                 const float epsilon = 1e-6f;
 
-                    if (abs(distance) > epsilon) {
-                        glm::vec3 dir = glm::vec3(
-                            transfromA.mPosition_.x - transfromB.mPosition_.x,
-                            transfromA.mPosition_.y - transfromB.mPosition_.y,
-                            0.0f
-                        );
+    //                 if (abs(distance) > epsilon) {
+    //                     glm::vec3 dir = glm::vec3(
+    //                         transfromA.mPosition_.x - transfromB.mPosition_.x,
+    //                         transfromA.mPosition_.y - transfromB.mPosition_.y,
+    //                         0.0f
+    //                     );
 
-                        const float scale = .1;
-                        rigidBodyA.velocity = (rigidBodyA.velocity - (dir * static_cast<float>(scale * (1.0f / pow(distance, 2.0f)) * dt)));
-                        rigidBodyB.velocity = (rigidBodyB.velocity + (dir * static_cast<float>(scale * (1.0f / pow(distance, 2.0f)) * dt)));
-                    }
-                }
-            }
-        }
-    }
+    //                     const float scale = .1;
+    //                     // rigidBodyA.velocity = (rigidBodyA.velocity - (dir * static_cast<float>(scale * (1.0f / pow(distance, 2.0f)) * dt)));
+    //                     // rigidBodyB.velocity = (rigidBodyB.velocity + (dir * static_cast<float>(scale * (1.0f / pow(distance, 2.0f)) * dt)));
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 // this only supports 2d circle without rotation. need to add more shape and rotation support

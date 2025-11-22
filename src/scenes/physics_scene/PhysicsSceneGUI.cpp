@@ -117,7 +117,7 @@ void PhysicsSceneGUI::entitySection() {
         mScene_.getEntityManager().addTransform(entity, {});
         mScene_.getEntityManager().addCollider(entity, {});
         clay::ecs::RigidBody rigidBody{};
-        rigidBody.attractive = true;
+        // rigidBody.attractive = true;
         mScene_.getEntityManager().addRigidBody(entity, rigidBody);
         mScene_.getEntities().insert(entity);
     }

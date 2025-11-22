@@ -6,6 +6,7 @@
 #include "scenes/basic_scene/BasicScene.h"
 #include "scenes/scene2d/Scene2d.h"
 #include "scenes/physics_scene/PhysicsScene.h"
+#include "scenes/physX_scene/PhysXScene.h"
 #include "scenes/galaxy/GalaxyScene.h"
 #include "scenes/games/GamesScene.h"
 
@@ -35,6 +36,9 @@ void MenuScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     }
     if (ImGui::Button("Physics Scene")) {
         ((clay::AppDesktop&)mApp_).setScene(new physics_scene::PhysicsScene(mApp_));
+    }
+    if (ImGui::Button("PhysX Scene")) {
+        ((clay::AppDesktop&)mApp_).setScene(new physX_scene::PhysXScene(mApp_));
     }
     if (ImGui::Button("Galaxy")) {
         ((clay::AppDesktop&)mApp_).setScene(new galaxy::GalaxyScene(mApp_));

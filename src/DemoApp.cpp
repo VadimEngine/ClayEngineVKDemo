@@ -705,4 +705,15 @@ void DemoApp::loadResources() {
         });
         mResources_.addResource(std::move(model), "SolidPlane");
     }
+    {
+        // Cube
+        clay::Model model(*mpGraphicsContext_);
+        model.addElement({
+            &mResources_[meshHandler_Cube],
+            &mResources_[materialHandle_Solid],
+            glm::mat4(1),
+        });
+        mResources_.addResource(std::move(model), "Cube");
+    }
+    // TODO add a cube model using meshHandler_Cube
 }

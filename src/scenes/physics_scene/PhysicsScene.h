@@ -50,4 +50,4 @@ private:
     clay::ecs::EntityManager mEntityManager_;
 };
 
-} // namespace physics_scene {
+} // namespace physics_scene
