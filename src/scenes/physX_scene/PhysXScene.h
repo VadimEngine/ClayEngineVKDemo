@@ -14,6 +14,12 @@ namespace physX_scene {
 
 class PhysXScene : public clay::BaseScene {
 public:
+
+    enum class ObjectType {
+        SPHERE = 0,
+        CUBE,
+    };
+
     PhysXScene(clay::BaseApp& app);
 
     ~PhysXScene();
@@ -26,7 +32,7 @@ public:
 
     void initialize() override;
 
-    void addEntity();
+    void addEntity(ObjectType type);
 
     void destroyResources() override;
 
@@ -39,15 +45,8 @@ public:
     clay::ecs::EntityManager mEntityManager_;
 
     physx::PxScene* mPXScene_ = nullptr;
-    physx::PxPhysics* mPxPhysics_ = nullptr;
-    physx::PxFoundation* mPxFoundation_ = nullptr;
-
-    physx::PxMaterial* mMaterial_;
-
+    physx::PxMaterial* mPXMaterial_ = nullptr;
     physx::PxRigidStatic* mGround_ = nullptr;
-
-    // std::vector<physx::PxRigidDynamic*> mBoxes_; 
-
 };
 
 } // namespace physX_scene

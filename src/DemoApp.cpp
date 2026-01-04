@@ -1,20 +1,51 @@
 // clay
 #include <clay/utils/desktop/UtilsDesktop.h>
 #include <clay/graphics/common/ShaderModule.h>
+#include <clay/graphics/common/AnimatedMesh.h>
+#include <clay/utils/common/Logger.h>
 // project
 #include "scenes/menu_scene/MenuScene.h"
 // class
 #include "DemoApp.h"
 
-DemoApp::DemoApp(clay::Window& window) 
+DemoApp::DemoApp(clay::Window& window)
     : clay::AppDesktop(window) {
     loadResources();
     setScene(new MenuScene(*this));
 }
 
-DemoApp::~DemoApp() {}
+DemoApp::~DemoApp() {
+}
 
 void DemoApp::loadResources() {
+    // audio
+    {
+        auto pongBounceData = clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "audio/beep_deep_1.wav").string()
+        );
+        mResources_.addResource<clay::Audio>(
+            clay::Audio(pongBounceData),
+            "BeepDeep1"
+        );
+    }
+    {
+        auto pongBounceData = clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "audio/Blip_1.wav").string()
+        );
+        mResources_.addResource<clay::Audio>(
+            clay::Audio(pongBounceData),
+            "Blip1"
+        );
+    }
+    {
+        auto pongBounceData = clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "audio/PatakasWorld.wav").string()
+        );
+        mResources_.addResource<clay::Audio>(
+            clay::Audio(pongBounceData),
+            "PatakasWorld"
+        );
+    }
     // Texture
     clay::ShaderModule textureVertShader(
         mpGraphicsContext_->getDevice(),
@@ -43,6 +74,51 @@ void DemoApp::loadResources() {
         vk::ShaderStageFlagBits::eFragment,
         clay::utils::loadFileToMemory_desktop(
             (clay::Resources::getResourcePath() / "shaders/Sprite.frag.spv").string()
+        )
+    );
+    // tilemap instanced
+    clay::ShaderModule tilemapInstancedVertShader(
+        mpGraphicsContext_->getDevice(),
+        vk::ShaderStageFlagBits::eVertex,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/TilemapInstanced.vert.spv").string()
+        )
+    );
+    clay::ShaderModule tilemapInstancedFragShader(
+        mpGraphicsContext_->getDevice(),
+        vk::ShaderStageFlagBits::eFragment,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/TilemapInstanced.frag.spv").string()
+        )
+    );
+    // flat shader
+    clay::ShaderModule flatVertShader(
+        mpGraphicsContext_->getDevice(),
+        vk::ShaderStageFlagBits::eVertex,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Flat.vert.spv").string()
+        )
+    );
+    clay::ShaderModule flatFragShader(
+        mpGraphicsContext_->getDevice(),
+        vk::ShaderStageFlagBits::eFragment,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Flat.frag.spv").string()
+        )
+    );
+    // animation shader
+    clay::ShaderModule animationVertShader(
+        mpGraphicsContext_->getDevice(),
+        vk::ShaderStageFlagBits::eVertex,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Animation.vert.spv").string()
+        )
+    );
+    clay::ShaderModule animationFragShader(
+        mpGraphicsContext_->getDevice(),
+        vk::ShaderStageFlagBits::eFragment,
+        clay::utils::loadFileToMemory_desktop(
+            (clay::Resources::getResourcePath() / "shaders/Animation.frag.spv").string()
         )
     );
 
@@ -74,33 +150,24 @@ void DemoApp::loadResources() {
         );
     }
 
-    clay::Resources::Handle<vk::Sampler> samplerHandle_Default;
+    clay::Handle<clay::Texture> textureHandle_VTexture;
+    clay::Handle<clay::Texture> textureHandle_SpriteSheet;
+    clay::Handle<clay::Texture> textureHandle_SolidTexture;
+    clay::Handle<clay::Texture> textureHandle_Sun;
+    clay::Handle<clay::Texture> textureHandle_Moon;
+    clay::Handle<clay::Texture> textureHandle_Earth;
+    clay::Handle<clay::Texture> textureHandle_Stars;
+    clay::Handle<clay::Texture> textureHandle_CloudSky;
+    clay::Handle<clay::Texture> textureHandle_RpgMap;
 
-    clay::Resources::Handle<clay::Texture> textureHandle_VTexture;
-    clay::Resources::Handle<clay::Texture> textureHandle_SpriteSheet;
-    clay::Resources::Handle<clay::Texture> textureHandle_SolidTexture;
-    clay::Resources::Handle<clay::Texture> textureHandle_Sun;
-    clay::Resources::Handle<clay::Texture> textureHandle_Moon;
-    clay::Resources::Handle<clay::Texture> textureHandle_Earth;
-    clay::Resources::Handle<clay::Texture> textureHandle_Stars;
+    clay::Handle<clay::PipelineResource> pipelineHandle_TextureDepth;
+    clay::Handle<clay::PipelineResource> pipelineHandle_TextureNoDepth;
+    clay::Handle<clay::PipelineResource> pipelineHandle_SpriteSheet;
+    clay::Handle<clay::PipelineResource> pipelineHandle_TilemapInstanced;
+    clay::Handle<clay::PipelineResource> pipelineHandle_Flat;
+    clay::Handle<clay::PipelineResource> pipelineHandle_Animation;
 
-    clay::Resources::Handle<clay::Mesh> meshHandler_Sphere;
-    clay::Resources::Handle<clay::Mesh> meshHandler_Plane;
-    clay::Resources::Handle<clay::Mesh> meshHandler_Cube;
-    clay::Resources::Handle<clay::Mesh> meshHandler_Torus;
-    clay::Resources::Handle<clay::Mesh> meshHandler_PlaneCircle;
-
-    clay::Resources::Handle<clay::PipelineResource> pipelineHandle_TextureDepth;
-    clay::Resources::Handle<clay::PipelineResource> pipelineHandle_TextureNoDepth;
-    clay::Resources::Handle<clay::PipelineResource> pipelineHandle_SpriteSheet;
-
-    clay::Resources::Handle<clay::Material> materialHandle_Solid;
-    clay::Resources::Handle<clay::Material> materialHandle_VTexture;
-    clay::Resources::Handle<clay::Material> materialHandle_SpriteSheet;
-    clay::Resources::Handle<clay::Material> materialHandle_Moon;
-    clay::Resources::Handle<clay::Material> materialHandle_Sun;
-    clay::Resources::Handle<clay::Material> materialHandle_Earth;
-    clay::Resources::Handle<clay::Material> materialHandle_Stars;
+    clay::Handle<vk::Sampler> samplerHandle_Default;
 
     // Sampler
     {
@@ -131,15 +198,17 @@ void DemoApp::loadResources() {
     }
     // Meshes
     // Sphere
-    meshHandler_Sphere = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Sphere.obj").string()}, "Sphere");
+    mAppProp.mMeshes.sphere = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Sphere.obj").string()}, "Sphere");
     // Plane
-    meshHandler_Plane = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Plane.obj").string()}, "Plane");
+    mAppProp.mMeshes.plane = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Plane.obj").string()}, "Plane");
     // Cube
-    meshHandler_Cube = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Cube.obj").string()}, "Cube");
+    mAppProp.mMeshes.cube = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Cube.obj").string()}, "Cube");
     // Torus
-    meshHandler_Torus = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Torus.obj").string()}, "Torus");
+    mAppProp.mMeshes.torus = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/Torus.obj").string()}, "Torus");
     // Plane Circle
-    meshHandler_PlaneCircle = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/PlaneCircle.obj").string()}, "PlaneCircle");
+    mAppProp.mMeshes.planeCircle = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/PlaneCircle.obj").string()}, "PlaneCircle");
+    // Human
+    mAppProp.mMeshes.human = mResources_.loadResource<clay::Mesh>({(clay::Resources::getResourcePath() / "models/rpg_3d/Human_lowPoly.obj").string()}, "Human");
     // images
     {
         clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/V.png");
@@ -222,6 +291,28 @@ void DemoApp::loadResources() {
 
         textureHandle_Stars = mResources_.addResource(std::move(texture), "Stars");
     }
+    {
+        // CloudSky
+        clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/CloudSky.jpg");
+        clay::utils::convertRGBtoRGBA(imageData);
+
+        clay::Texture texture(*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
+
+        textureHandle_CloudSky = mResources_.addResource(std::move(texture), "CloudSky");
+    }
+    {
+        // rpg map
+        clay::utils::ImageData imageData = clay::utils::loadImageFileToMemory_desktop(clay::Resources::getResourcePath() / "textures/rpg_2d/World1.png");
+        clay::utils::convertRGBtoRGBA(imageData);
+
+        clay::Texture texture(*mpGraphicsContext_);
+        texture.initialize(imageData);
+        texture.setSampler(mResources_[samplerHandle_Default]);
+
+        textureHandle_RpgMap = mResources_.addResource(std::move(texture), "RpgMap");
+    }
     // pipeline 
     {
         // (TextureDepth)
@@ -234,7 +325,8 @@ void DemoApp::loadResources() {
         };
 
         auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
-        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.end()};
+        // Only use first 3 attributes (position, normal, texCoord) - shaders don't use tangent/bitangent
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.begin() + 3};
         pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
 
         pipelineConfig.pipelineLayoutInfo.depthStencilState = {
@@ -296,7 +388,8 @@ void DemoApp::loadResources() {
         };
 
         auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
-        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.end()};
+        // Only use first 3 attributes (position, normal, texCoord) - shaders don't use tangent/bitangent
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.begin() + 3};
         pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
 
         pipelineConfig.pipelineLayoutInfo.depthStencilState = {
@@ -348,6 +441,71 @@ void DemoApp::loadResources() {
         );
     }
     {
+        // (TilemapInstanced)
+        clay::PipelineResource::PipelineConfig pipelineConfig{
+            .graphicsContext = *mpGraphicsContext_
+        };
+
+        pipelineConfig.pipelineLayoutInfo.shaders = {
+            &tilemapInstancedVertShader, &tilemapInstancedFragShader
+        };
+
+        auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
+        // Only use first 3 attributes (position, normal, texCoord) - shaders don't use tangent/bitangent
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.begin() + 3};
+        pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
+
+        pipelineConfig.pipelineLayoutInfo.depthStencilState = {
+            .depthTestEnable = vk::True,
+            .depthWriteEnable = vk::True,
+            .depthCompareOp =  vk::CompareOp::eLessOrEqual,
+            .depthBoundsTestEnable = vk::False,
+            .stencilTestEnable = vk::False,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.rasterizerState = {
+            .depthClampEnable = vk::False,
+            .rasterizerDiscardEnable = vk::False,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eNone,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = vk::False,
+            .lineWidth = 1.0f,
+        };
+
+        // No push constants for instanced rendering
+        pipelineConfig.pipelineLayoutInfo.pushConstants = {};
+
+        pipelineConfig.bindingLayoutInfo.bindings = {
+            {
+                0,
+                vk::DescriptorType::eUniformBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr
+            },
+            {
+                1,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                vk::ShaderStageFlagBits::eFragment,
+                nullptr
+            },
+            {
+                2,
+                vk::DescriptorType::eStorageBuffer,
+                1,
+                vk::ShaderStageFlagBits::eVertex,
+                nullptr
+            }
+        };
+
+        pipelineHandle_TilemapInstanced = mResources_.addResource<clay::PipelineResource>(
+            clay::PipelineResource(pipelineConfig),
+            "TilemapInstanced"
+        );
+    }
+    {
         // TextureNoDepth
         clay::PipelineResource::PipelineConfig pipelineConfig{
             .graphicsContext = *mpGraphicsContext_
@@ -358,7 +516,8 @@ void DemoApp::loadResources() {
         };
 
         auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
-        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.end()};
+        // Only use first 3 attributes (position, normal, texCoord) - shaders don't use tangent/bitangent
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.begin() + 3};
         pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
 
         pipelineConfig.pipelineLayoutInfo.depthStencilState = {
@@ -409,6 +568,124 @@ void DemoApp::loadResources() {
             "TextureNoDepth"
         );
     }
+    // pipeline (flat)
+    {
+        clay::PipelineResource::PipelineConfig pipelineConfig{
+            .graphicsContext = *mpGraphicsContext_
+        };
+
+        pipelineConfig.pipelineLayoutInfo.shaders = {
+            &flatVertShader, &flatFragShader
+        };
+
+        auto vertexAttrib = clay::Mesh::Vertex::getAttributeDescriptions();
+        // Only use first 3 attributes (position, normal, texCoord) - shaders don't use tangent/bitangent
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.begin() + 3};
+        pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::Mesh::Vertex::getBindingDescription();
+
+        pipelineConfig.pipelineLayoutInfo.depthStencilState = {
+            .depthTestEnable = true,
+            .depthWriteEnable = true,
+            .depthCompareOp = vk::CompareOp::eLessOrEqual,
+            .depthBoundsTestEnable = false,
+            .stencilTestEnable = false,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.rasterizerState = {
+            .depthClampEnable = false,
+            .rasterizerDiscardEnable = false,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eNone,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = false,
+            .lineWidth = 1.0f,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.pushConstants = {
+            {
+                .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                .offset = 0,
+                .size = sizeof(glm::mat4) + sizeof(glm::vec4)
+            }
+        };
+
+        pipelineConfig.bindingLayoutInfo.bindings = {
+            {
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer,
+                .descriptorCount = 1,
+                .stageFlags = vk::ShaderStageFlagBits::eVertex,
+                .pImmutableSamplers = nullptr
+            },
+        };
+
+        pipelineHandle_Flat = mResources_.addResource<clay::PipelineResource>(
+            clay::PipelineResource(pipelineConfig),
+            "Flat"
+        );
+    }
+    // pipeline (animation)
+    {
+        clay::PipelineResource::PipelineConfig pipelineConfig{
+            .graphicsContext = *mpGraphicsContext_
+        };
+
+        pipelineConfig.pipelineLayoutInfo.shaders = {
+            &animationVertShader, &animationFragShader
+        };
+
+        auto vertexAttrib = clay::AnimatedMesh::Vertex::getAttributeDescriptions();
+        pipelineConfig.pipelineLayoutInfo.attributeDescriptions = {vertexAttrib.begin(), vertexAttrib.end()};
+        pipelineConfig.pipelineLayoutInfo.vertexInputBindingDescription = clay::AnimatedMesh::Vertex::getBindingDescription();
+
+        pipelineConfig.pipelineLayoutInfo.depthStencilState = {
+            .depthTestEnable = true,
+            .depthWriteEnable = true,
+            .depthCompareOp = vk::CompareOp::eLessOrEqual,
+            .depthBoundsTestEnable = false,
+            .stencilTestEnable = false,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.rasterizerState = {
+            .depthClampEnable = false,
+            .rasterizerDiscardEnable = false,
+            .polygonMode = vk::PolygonMode::eFill,
+            .cullMode = vk::CullModeFlagBits::eBack,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            .depthBiasEnable = false,
+            .lineWidth = 1.0f,
+        };
+
+        pipelineConfig.pipelineLayoutInfo.pushConstants = {
+            {
+                .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                .offset = 0,
+                .size = sizeof(glm::mat4) + sizeof(glm::vec4)
+            }
+        };
+
+        pipelineConfig.bindingLayoutInfo.bindings = {
+            {
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer,
+                .descriptorCount = 1,
+                .stageFlags = vk::ShaderStageFlagBits::eVertex,
+                .pImmutableSamplers = nullptr
+            },
+            {
+                .binding = 1,
+                .descriptorType = vk::DescriptorType::eUniformBuffer,
+                .descriptorCount = 1,
+                .stageFlags = vk::ShaderStageFlagBits::eVertex,
+                .pImmutableSamplers = nullptr
+            },
+        };
+
+        pipelineHandle_Animation = mResources_.addResource<clay::PipelineResource>(
+            clay::PipelineResource(pipelineConfig),
+            "Animation3D"
+        );
+    }
     // Material
     {
         // Single White
@@ -435,7 +712,7 @@ void DemoApp::loadResources() {
         };
 
 
-        materialHandle_Solid = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.solid = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "SolidTexture"
         );
@@ -464,7 +741,7 @@ void DemoApp::loadResources() {
             }
         };
 
-        materialHandle_VTexture = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.vTexture = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "VTexture"
         );
@@ -493,9 +770,68 @@ void DemoApp::loadResources() {
             }
         };
 
-        materialHandle_SpriteSheet = materialHandle_SpriteSheet = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.spriteSheet = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "SpriteSheet"
+        );
+    }
+    {
+        // TilemapInstanced (SSBO will be set by Tilemap class when load() is called)
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = mResources_[pipelineHandle_TilemapInstanced]
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer
+            }
+        };
+        matConfig.imageBindings = {
+            {
+                .sampler = mResources_[textureHandle_SpriteSheet].getSampler(),
+                .imageView = mResources_[textureHandle_SpriteSheet].getImageView(),
+                .binding = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
+            }
+        };
+        // Note: SSBO binding (binding = 2) will be added by Tilemap when it creates the instance buffer
+
+        mAppProp.mMaterials.tilemapInstanced = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
+            "TilemapInstanced"
+        );
+    }
+    {
+        // RpgMap
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = mResources_[pipelineHandle_SpriteSheet]
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer
+            }
+        };
+        matConfig.imageBindings = {
+            {
+                .sampler = mResources_[textureHandle_RpgMap].getSampler(),
+                .imageView = mResources_[textureHandle_RpgMap].getImageView(),
+                .binding = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
+            }
+        };
+
+        mAppProp.mMaterials.rpgMap = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
+            "RpgMap"
         );
     }
     {
@@ -522,7 +858,7 @@ void DemoApp::loadResources() {
             }
         };
 
-        materialHandle_Sun = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.sun = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "Sun"
         );
@@ -551,7 +887,7 @@ void DemoApp::loadResources() {
             }
         };
 
-        materialHandle_Moon = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.moon = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "Moon"
         );
@@ -580,7 +916,7 @@ void DemoApp::loadResources() {
             }
         };
 
-        materialHandle_Earth = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.earth = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "Earth"
         );
@@ -609,111 +945,308 @@ void DemoApp::loadResources() {
             }
         };
 
-        materialHandle_Stars = mResources_.addResource<clay::Material>(
+        mAppProp.mMaterials.stars = mResources_.addResource<clay::Material>(
             clay::Material(matConfig),
             "Stars"
         );
     }
+    {
+        // CloudSky
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = mResources_[pipelineHandle_TextureNoDepth]
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniformHeadLocked_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer
+            }
+        };
+        matConfig.imageBindings = {
+            {
+                .sampler = mResources_[textureHandle_CloudSky].getSampler(),
+                .imageView = mResources_[textureHandle_CloudSky].getImageView(),
+                .binding = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
+            }
+        };
+
+        mAppProp.mMaterials.cloudSkyNoDepth = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
+            "CloudSky"
+        );
+    }
+    {
+        // CloudSky with Depth
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = mResources_[pipelineHandle_TextureDepth]
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer
+            }
+        };
+        matConfig.imageBindings = {
+            {
+                .sampler = mResources_[textureHandle_CloudSky].getSampler(),
+                .imageView = mResources_[textureHandle_CloudSky].getImageView(),
+                .binding = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler
+            }
+        };
+
+        mAppProp.mMaterials.cloudSkyDepth = mResources_.addResource<clay::Material>(
+            clay::Material(matConfig),
+            "CloudSkyDepth"
+        );
+    }
+    // Flat
+    {
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = mResources_[pipelineHandle_Flat]
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer
+            }
+        };
+
+        mAppProp.mMaterials.flat = mResources_.addResource<clay::Material>(
+            std::move(clay::Material(matConfig)),
+            "Flat"
+        );
+    }
+    // Animation material
+    // Note: Bone buffer (binding=1) is NOT included in the shared material
+    // Each animated entity will bind its own bone buffer at render time
+    {
+        clay::Material::MaterialConfig matConfig {
+            .graphicsContext = *mpGraphicsContext_,
+            .pipelineResource = mResources_[pipelineHandle_Animation]
+        };
+
+        matConfig.bufferBindings = {
+            {
+                .buffer = mGraphicsContextDesktop_.mCameraUniform_->mBuffer_,
+                .size = sizeof(clay::BaseScene::CameraConstant),
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eUniformBuffer
+            }
+            // Binding 1 (bone transforms) intentionally omitted - handled per-entity
+        };
+        
+        mAppProp.mMaterials.animation = mResources_.addResource<clay::Material>(
+            std::move(clay::Material(matConfig)),
+            "Animation3D"
+        );
+    }
+    
+    // Animated Mesh and Skeletal Animation
+    {
+        std::filesystem::path fbxPath = clay::Resources::getResourcePath() / "models/rpg_3d/walk_cycle.fbx";
+        clay::SkeletalAnimation tempAnimation;
+        std::unique_ptr<clay::AnimatedMesh> animatedMesh = clay::AnimatedMesh::loadFromFBX(
+            *mpGraphicsContext_,
+            fbxPath.string(),
+            &tempAnimation
+        );
+        
+        if (animatedMesh) {
+            tempAnimation.setMesh(animatedMesh.get());
+            tempAnimation.setLooping(true);
+            
+            // Add mesh to resources first
+            mResources_.addResource<clay::AnimatedMesh>(std::move(*animatedMesh), "WalkCycleCharacter");
+            
+            // Update animation to point to the mesh in resources (after move)
+            auto meshHandle = mResources_.getHandle<clay::AnimatedMesh>("WalkCycleCharacter");
+            tempAnimation.setMesh(&mResources_[meshHandle]);
+            
+            // Now add animation to resources
+            mResources_.addResource<clay::SkeletalAnimation>(std::move(tempAnimation), "WalkCycleAnimation");
+        }
+    }
+    
     // Models
     {
         // Solid Sphere
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Sphere],
-            &mResources_[materialHandle_Solid],
+            mAppProp.mMeshes.sphere,
+            mAppProp.mMaterials.solid,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "SolidSphere");
+        mAppProp.mModels.solidSphere = mResources_.addResource(std::move(model), "SolidSphere");
     }
     {
         // V Texture Sphere
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Sphere],
-            &mResources_[materialHandle_VTexture],
+            mAppProp.mMeshes.sphere,
+            mAppProp.mMaterials.vTexture,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "VSphere");
+        mAppProp.mModels.vSphere = mResources_.addResource(std::move(model), "VSphere");
     }
     {
         // Solid Plane
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Plane],
-            &mResources_[materialHandle_Solid],
+            mAppProp.mMeshes.plane,
+            mAppProp.mMaterials.solid,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "SolidPlane");
+        mAppProp.mModels.solidPlane = mResources_.addResource(std::move(model), "SolidPlane");
     }
     {
         // Solid Torus
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Torus],
-            &mResources_[materialHandle_Solid],
+            mAppProp.mMeshes.torus,
+            mAppProp.mMaterials.solid,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "SolidTorus");
+        mAppProp.mModels.solidTorus = mResources_.addResource(std::move(model), "SolidTorus");
     }
     {
         // Sun
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Sphere],
-            &mResources_[materialHandle_Sun],
+            mAppProp.mMeshes.sphere,
+            mAppProp.mMaterials.sun,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "Sun");
+        mAppProp.mModels.sun = mResources_.addResource(std::move(model), "Sun");
     }
     {
         // Moon
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Sphere],
-            &mResources_[materialHandle_Moon],
+            mAppProp.mMeshes.sphere,
+            mAppProp.mMaterials.moon,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "Moon");
+        mAppProp.mModels.moon = mResources_.addResource(std::move(model), "Moon");
     }
     {
         // Earth
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Torus],
-            &mResources_[materialHandle_Earth],
+            mAppProp.mMeshes.torus,
+            mAppProp.mMaterials.earth,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "Earth");
+        mAppProp.mModels.earth = mResources_.addResource(std::move(model), "Earth");
     }
     {
         // Solid Circle
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_PlaneCircle],
-            &mResources_[materialHandle_Solid],
+            mAppProp.mMeshes.planeCircle,
+            mAppProp.mMaterials.solid,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "SolidCircle");
-    }
-    {
-        // Solid Plane
-        clay::Model model(*mpGraphicsContext_);
-        model.addElement({
-            &mResources_[meshHandler_Plane],
-            &mResources_[materialHandle_Solid],
-            glm::mat4(1),
-        });
-        mResources_.addResource(std::move(model), "SolidPlane");
+        mAppProp.mModels.solidCircle = mResources_.addResource(std::move(model), "SolidCircle");
     }
     {
         // Cube
-        clay::Model model(*mpGraphicsContext_);
+        clay::Model model;
         model.addElement({
-            &mResources_[meshHandler_Cube],
-            &mResources_[materialHandle_Solid],
+            mAppProp.mMeshes.cube,
+            mAppProp.mMaterials.solid,
             glm::mat4(1),
         });
-        mResources_.addResource(std::move(model), "Cube");
+        mAppProp.mModels.cube = mResources_.addResource(std::move(model), "Cube");
     }
-    // TODO add a cube model using meshHandler_Cube
+    // human
+    {
+        clay::Model model;
+        model.addElement({
+            mAppProp.mMeshes.human,
+            mAppProp.mMaterials.flat,
+            glm::mat4(1),
+        });
+        mAppProp.mModels.human = mResources_.addResource(std::move(model), "Human");
+    }
+    {
+        // sky plane
+        clay::Model model;
+        model.addElement({
+            mAppProp.mMeshes.plane,
+            mAppProp.mMaterials.cloudSkyDepth,
+            glm::mat4(1),
+        });
+        mAppProp.mModels.skyPlane = mResources_.addResource(std::move(model), "SkyPlane");
+    }
+    
+    // Animations
+    {
+        // Player walk down
+        clay::Animation2D walkDown;
+        walkDown.materialHandle = mAppProp.mMaterials.spriteSheet;
+        walkDown.frames = {
+            glm::vec4(3 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(4 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(3 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(5 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f)
+        };
+        walkDown.frameDuration = 1.0f / 4.0f;
+        walkDown.loop = true;
+        mResources_.addResource(std::move(walkDown), "PlayerWalkDown");
+    }
+    {
+        // Player walk left
+        clay::Animation2D walkLeft;
+        walkLeft.materialHandle = mAppProp.mMaterials.spriteSheet;
+        walkLeft.frames = {
+            glm::vec4(6 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(7 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(6 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(8 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f)
+        };
+        walkLeft.frameDuration = 1.0f / 4.0f;
+        walkLeft.loop = true;
+        mResources_.addResource(std::move(walkLeft), "PlayerWalkLeft");
+    }
+    {
+        // Player walk right
+        clay::Animation2D walkRight;
+        walkRight.materialHandle = mAppProp.mMaterials.spriteSheet;
+        walkRight.frames = {
+            glm::vec4(9 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(10 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(9 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(11 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f)
+        };
+        walkRight.frameDuration = 1.0f / 4.0f;
+        walkRight.loop = true;
+        mResources_.addResource(std::move(walkRight), "PlayerWalkRight");
+    }
+    {
+        // Player walk up
+        clay::Animation2D walkUp;
+        walkUp.materialHandle = mAppProp.mMaterials.spriteSheet;
+        walkUp.frames = {
+            glm::vec4(12 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(13 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(12 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f),
+            glm::vec4(14 * 16.0f / 512.0f, 0, 16.0f / 512.0f, 16.0f / 512.0f)
+        };
+        walkUp.frameDuration = 1.0f / 4.0f;
+        walkUp.loop = true;
+        mResources_.addResource(std::move(walkUp), "PlayerWalkUp");
+    }
 }

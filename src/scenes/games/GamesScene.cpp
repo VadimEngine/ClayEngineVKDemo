@@ -8,6 +8,10 @@
 // class
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/games/GamesScene.h"
+#include "scenes/games/pong/PongScene.h"
+#include "scenes/games/rpg_2d/RPG2dScene.h"
+#include "scenes/games/rpg_3d/RPG3dScene.h"
+#include "scenes/games/platform_2d/Platformer2dScene.h"
 
 GamesScene::GamesScene(clay::BaseApp& app): clay::BaseScene(app) {}
 
@@ -30,6 +34,21 @@ void GamesScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     ImGui::Begin("Games", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
     ImGui::Text("Games WIP");
 
+    if (ImGui::Button("Pong")) {
+        ((clay::AppDesktop&)mApp_).setScene(new pong::PongScene(mApp_));
+    }
+
+    if (ImGui::Button("RPG 2D")) {
+        ((clay::AppDesktop&)mApp_).setScene(new rpg_2d::RPG2dScene(mApp_));
+    }
+
+    if (ImGui::Button("RPG 3D")) {
+        ((clay::AppDesktop&)mApp_).setScene(new rpg_3d::RPG3dScene(mApp_));
+    }
+
+    if (ImGui::Button("Platformer 2D")) {
+        ((clay::AppDesktop&)mApp_).setScene(new platform_2d::Platformer2dScene(mApp_));
+    }
     if (ImGui::Button("Back")) {
         ((clay::AppDesktop&)mApp_).setScene(new MenuScene(((clay::AppDesktop&)mApp_)));
     }

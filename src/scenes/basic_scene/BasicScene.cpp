@@ -1,8 +1,9 @@
 // clay
 #include <clay/application/desktop/AppDesktop.h>
-// class
+// project
 #include "scenes/basic_scene/BasicScene.h"
 #include "scenes/menu_scene/MenuScene.h"
+#include "DemoApp.h"
 
 namespace basic_scene {
 
@@ -17,50 +18,47 @@ BasicScene::BasicScene(clay::BaseApp& app)
     {
         // solid sphere
         clay::ecs::Entity entity = mEntityManager_.createEntity();
-        mEntityManager_.addModelRenderable(
+        mEntityManager_.addComponent<clay::ecs::ModelRenderable>(
             entity, 
             { 
-                mApp_.getResources().getHandle<clay::Model>("SolidSphere"),
+                ((DemoApp&)mApp_).mAppProp.mModels.solidSphere,
                 {1,1,1,1}
             }
         );
         clay::ecs::Transform transform;
         transform.mPosition_ = {0, 1, 0};
-        mEntityManager_.addTransform(entity, transform);
+        mEntityManager_.addComponent<clay::ecs::Transform>(entity, transform);
         mECSEntities_.insert(entity);
     }
 
     {
         // Texture sphere
         mTextureSphere_ = mEntityManager_.createEntity();
-        mEntityManager_.addModelRenderable(
+        mEntityManager_.addComponent<clay::ecs::ModelRenderable>(
             mTextureSphere_, 
             { 
-                mApp_.getResources().getHandle<clay::Model>("VSphere"),
+                ((DemoApp&)mApp_).mAppProp.mModels.vSphere,
                 {1,1,1,1}
             }
         );
         clay::ecs::Transform transform;
         transform.mPosition_ = {1, 1, 0};
-        mEntityManager_.addTransform(mTextureSphere_, transform);
+        mEntityManager_.addComponent<clay::ecs::Transform>(mTextureSphere_, transform);
         mECSEntities_.insert(mTextureSphere_);
     }
     {
         // Text
         clay::ecs::Entity entity = mEntityManager_.createEntity();
         clay::ecs::TextRenderable text;
-        text.initialize(
-            mApp_.getGraphicsContext(),
-            "HELLO WORLD",
-            &mApp_.getResources()[mApp_.getResources().getHandle<clay::Font>("Runescape")]
-        );
+        text.setFont(&mApp_.getResources()[mApp_.getResources().getHandle<clay::Font>("Runescape")]);
+        text.setText(mApp_.getGraphicsContext(), "HELLO WORLD");
         text.mScale_ = {.01f,.01f,.01f};
         text.mColor_ = {1,1,0,1};
-        mEntityManager_.addTextRenderable(
+        mEntityManager_.addComponent<clay::ecs::TextRenderable>(
             entity, 
             text
         );
-        mEntityManager_.addTransform(entity, {});
+        mEntityManager_.addComponent<clay::ecs::Transform>(entity, {});
         mECSEntities_.insert(entity);
     }
 
@@ -69,24 +67,24 @@ BasicScene::BasicScene(clay::BaseApp& app)
         clay::ecs::Entity entity = mEntityManager_.createEntity();
 
         clay::ecs::SpriteRenderable sprite;
-        mEntityManager_.addSpriteRenderable(
+        mEntityManager_.addComponent<clay::ecs::SpriteRenderable>(
             entity, 
             {
-                &mApp_.getResources()[mApp_.getResources().getHandle<clay::Mesh>("Plane")],
-                &mApp_.getResources()[mApp_.getResources().getHandle<clay::Material>("SpriteSheet")],
+                ((DemoApp&)mApp_).mAppProp.mMeshes.plane,
+                ((DemoApp&)mApp_).mAppProp.mMaterials.spriteSheet,
                 {0, 0, 16.0f / 512.0f, 16.0f / 512.0f},
                 {1,1,1,1}
             }
         );
         clay::ecs::Transform transform;
         transform.mPosition_ = {-1, 1, 0};
-        mEntityManager_.addTransform(entity, transform);
+        mEntityManager_.addComponent<clay::ecs::Transform>(entity, transform);
         mECSEntities_.insert(entity);
     }
     {
         // floor
         clay::ecs::Entity entity = mEntityManager_.createEntity();
-        mEntityManager_.addModelRenderable(
+        mEntityManager_.addComponent<clay::ecs::ModelRenderable>(
             entity, 
             { 
                 mApp_.getResources().getHandle<clay::Model>("SolidPlane"),
@@ -97,7 +95,7 @@ BasicScene::BasicScene(clay::BaseApp& app)
         transform.mPosition_ = {0, 0, 0};
         transform.mScale_ = {10, 10, 1};
         transform.mOrientation_ = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        mEntityManager_.addTransform(entity, transform);
+        mEntityManager_.addComponent<clay::ecs::Transform>(entity, transform);
         mECSEntities_.insert(entity);
     }
 }

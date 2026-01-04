@@ -8,6 +8,7 @@
 // class
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/physX_scene/PhysXScene.h"
+#include "DemoApp.h"
 
 namespace physX_scene {
 
@@ -18,44 +19,33 @@ PhysXScene::PhysXScene(clay::BaseApp& app)
 
     getFocusCamera()->setPosition({0,1,10});
 
-    // Initialize PhysX Foundation and Physics
-    static physx::PxDefaultAllocator gAllocator;
-    static physx::PxDefaultErrorCallback gErrorCallback;
-
-    mPxFoundation_ = PxCreateFoundation(
-        PX_PHYSICS_VERSION, 
-        gAllocator,
-        gErrorCallback
-    );
-
-    if (!mPxFoundation_) {
-        LOG_E("PhysX Foundation creation failed");
+    // Get PhysicsSystem from EntityManager
+    auto& physicsSystem = mEntityManager_.mPhysicsSystem_;
+    
+    if (!physicsSystem.isInitialized()) {
+        LOG_E("PhysicsSystem not initialized");
+        return;
     }
 
-    mPxPhysics_ = PxCreatePhysics(
-        PX_PHYSICS_VERSION,
-        *mPxFoundation_,
-        physx::PxTolerancesScale()
-    );
-
-    // Create a simple scene
-    physx::PxSceneDesc sceneDesc(mPxPhysics_->getTolerancesScale());
+    // Create a scene using the PhysicsSystem
+    physx::PxSceneDesc sceneDesc(physicsSystem.getPhysics()->getTolerancesScale());
     sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
     sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
     sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
 
-    mPXScene_ = mPxPhysics_->createScene(sceneDesc);
+    mPXScene_ = physicsSystem.createScene(sceneDesc);
     if (!mPXScene_) {
         LOG_E("PhysX Scene creation failed");
-        mPxPhysics_->release();
-        mPxFoundation_->release();
+        return;
     }
-    LOG_I("PhysX initialized successfully");
-
+    
+    // Register the scene with PhysicsSystem so it can simulate it
+    physicsSystem.setScene(mPXScene_);
+    
     // --- Create Ground Plane ---
-    mMaterial_ = mPxPhysics_->createMaterial(0.5f, 0.5f, 0.6f);
+    mPXMaterial_ = physicsSystem.getPhysics()->createMaterial(0.5f, 0.5f, 0.6f);
 
-    mGround_ = physx::PxCreatePlane(*mPxPhysics_, physx::PxPlane(0, 1, 0, 0), *mMaterial_);
+    mGround_ = physx::PxCreatePlane(*physicsSystem.getPhysics(), physx::PxPlane(0, 1, 0, 0), *mPXMaterial_);
     mPXScene_->addActor(*mGround_);
 
     // --- Create a Dynamic Box ---
@@ -67,10 +57,10 @@ PhysXScene::PhysXScene(clay::BaseApp& app)
         // Ground
         clay::ecs::Entity entity = mEntityManager_.createEntity();
 
-        mEntityManager_.addModelRenderable(
+        mEntityManager_.addComponent<clay::ecs::ModelRenderable>(
             entity, 
             { 
-                mApp_.getResources().getHandle<clay::Model>("SolidPlane"),
+                ((DemoApp&)mApp_).mAppProp.mModels.solidPlane,
                 {.5,.5,.5,1}
             }
         );
@@ -80,7 +70,7 @@ PhysXScene::PhysXScene(clay::BaseApp& app)
         glm::quat rotX = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f,0.0f,0.0f));
         glm::quat finalQuat = rotX * physxQuat;
 
-        mEntityManager_.addTransform(
+        mEntityManager_.addComponent<clay::ecs::Transform>(
             entity,
             {
                 .mPosition_ = {t.p.x, t.p.y, t.p.z},
@@ -92,14 +82,27 @@ PhysXScene::PhysXScene(clay::BaseApp& app)
         mEntities_.insert(entity);
     }
 
-    addEntity();
 }
 
 PhysXScene::~PhysXScene() {
-    if (mGround_) mGround_->release();
-    if (mPXScene_) mPXScene_->release();
-    if (mPxPhysics_) mPxPhysics_->release();
-    if (mPxFoundation_) mPxFoundation_->release();
+    // Clean up PhysX actors BEFORE EntityManager is destroyed
+    mEntityManager_.releasePhysicsActors();
+    
+    // Clean up scene-specific PhysX resources
+    if (mGround_) {
+        mGround_->release();
+        mGround_ = nullptr;
+    }
+    
+    if (mPXScene_) {
+        mPXScene_->release();
+        mPXScene_ = nullptr;
+    }
+    
+    if (mPXMaterial_) {
+        mPXMaterial_->release();
+        mPXMaterial_ = nullptr;
+    }
 }
 
 void PhysXScene::update(const float dt) {
@@ -149,10 +152,7 @@ void PhysXScene::update(const float dt) {
         mCamera_.zoom(mCamera_.getZoomSpeed() * dt);
     }
 
-
-    mPXScene_->simulate(dt);
-    mPXScene_->fetchResults(true);
-
+    // PhysX simulation is now handled by PhysicsSystem::update()
     mEntityManager_.update(dt);
 }
 
@@ -185,49 +185,64 @@ void PhysXScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     mGui_.render(cmdBuffer);
 }
 
-void PhysXScene::addEntity() {
-    // --- Create a Dynamic Box ---
-    physx::PxTransform boxTransform(physx::PxVec3(0.0f, 5.0f, 0.0f));
-    physx::PxBoxGeometry boxGeometry(0.5f, 0.5f, 0.5f);
-
+void PhysXScene::addEntity(ObjectType type) {
+    LOG_I("Adding entity of type %d", static_cast<int>(type));
+    // Determine spawn position and geometry based on type
+    physx::PxTransform transform(physx::PxVec3(0.0f, 5.0f, 0.0f));
+    physx::PxGeometry* geometry = nullptr;
+    std::string modelName;
+    
+    // Create appropriate geometry and set model based on type
+    physx::PxSphereGeometry sphereGeom(0.5f);
+    physx::PxBoxGeometry boxGeom(0.5f, 0.5f, 0.5f);
+    
+    switch(type) {
+        case ObjectType::SPHERE:
+            geometry = &sphereGeom;
+            modelName = "SolidSphere";
+            break;
+        case ObjectType::CUBE:
+            geometry = &boxGeom;
+            modelName = "Cube";
+            break;
+    }
+    
+    // Create rigid body
+    auto& physicsSystem = mEntityManager_.mPhysicsSystem_;
     auto* rigidBody = physx::PxCreateDynamic(
-        *mPxPhysics_,
-        boxTransform,
-        boxGeometry,
-        *mMaterial_,
+        *physicsSystem.getPhysics(),
+        transform,
+        *geometry,
+        *mPXMaterial_,
         1.0f
     );
-
+    
     rigidBody->setAngularDamping(0.5f);
     mPXScene_->addActor(*rigidBody);
+    
+    // Create entity and add components
     clay::ecs::Entity entity = mEntityManager_.createEntity();
-
-    mEntityManager_.addModelRenderable(
+    
+    mEntityManager_.addComponent<clay::ecs::ModelRenderable>(
         entity, 
         { 
-            mApp_.getResources().getHandle<clay::Model>("Cube"),
+            mApp_.getResources().getHandle<clay::Model>(modelName),
             {1,1,1,1}
         }
     );
     
     physx::PxTransform t = rigidBody->getGlobalPose();
-
-    mEntityManager_.addTransform(
+    
+    mEntityManager_.addComponent<clay::ecs::Transform>(
         entity, 
         {
             .mPosition_ = {t.p.x, t.p.y, t.p.z},
-            .mOrientation_ = { t.q.w, t.q.x, t.q.y, t.q.z},
+            .mOrientation_ = {t.q.w, t.q.x, t.q.y, t.q.z},
             .mScale_ {1,1,1}
         }
     );
-
-    mEntityManager_.addRigidBody(
-        entity,
-        {
-            rigidBody
-        }
-    );
-
+    
+    mEntityManager_.addComponent<clay::ecs::PhysXRigidBody>(entity, {rigidBody});
     mEntities_.insert(entity);
 }
 

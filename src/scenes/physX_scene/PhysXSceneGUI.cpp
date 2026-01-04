@@ -35,20 +35,12 @@ void PhysXSceneGUI::render(vk::CommandBuffer cmdBuffer) {
     }
     const auto cameraPos = mScene_.getFocusCamera()->getPosition();
     ImGui::Text("Camera: %.1f %.1f %.1f", cameraPos.x, cameraPos.y, cameraPos.z);
+    
+    if (ImGui::Checkbox("Show Colliders", &mShowColliders_)) {
+        mScene_.mEntityManager_.mRenderSystem_.mDebugDrawColliders_ = mShowColliders_;
+    }
+    
     ImGui::Separator();
-    // entitySection();
-
-    // if (mScene_.mBox_) {
-    //     physx::PxTransform t = mScene_.mBox_->getGlobalPose();
-    //     ImGui::Text("Box Position: %.2f, %.2f, %.2f",
-    //         t.p.x, t.p.y, t.p.z);
-    // }
-
-    // if (ImGui::Button("Reset Box")) {
-    //     mScene_.mBox_->setGlobalPose(physx::PxTransform(physx::PxVec3(0, 5, 0)));
-    //     mScene_.mBox_->setLinearVelocity(physx::PxVec3(0, 0, 0));
-    //     mScene_.mBox_->setAngularVelocity(physx::PxVec3(0, 0, 0));
-    // }
 
     controlSection();
 
@@ -77,12 +69,12 @@ void PhysXSceneGUI::controlSection() {
         ImGui::EndListBox();
     }
 
-    if (mScene_.mEntities_.contains(mSelectedEntityIndex_) && mScene_.mEntityManager_.mSignatures[mSelectedEntityIndex_][clay::ecs::RIGID_BODY] ) {
+    if (mScene_.mEntities_.contains(mSelectedEntityIndex_) && mScene_.mEntityManager_.mSignatures[mSelectedEntityIndex_][clay::ecs::PHYSX_RIGID_BODY] ) {
         // Display selected Entity details/controls
         // for now assume there is a Transform
         //clay::ecs::Transform& transform = mScene_.mEntityManager_.mTransforms[mSelectedEntityIndex_];
 
-        physx::PxTransform pxTransform = mScene_.mEntityManager_.mRigidBodies[mSelectedEntityIndex_].actor->getGlobalPose();
+        physx::PxTransform pxTransform = mScene_.mEntityManager_.mPhysXRigidBodies[mSelectedEntityIndex_].actor->getGlobalPose();
         clay::ecs::Transform clTransform = mScene_.mEntityManager_.mTransforms[mSelectedEntityIndex_];
 
         float entityPosition[3] = {
@@ -105,7 +97,7 @@ void PhysXSceneGUI::controlSection() {
         };
 
         if (ImGui::SliderFloat3("Position##Entity", entityPosition, -10.f, 10.f, "%.2f")) {
-            mScene_.mEntityManager_.mRigidBodies[mSelectedEntityIndex_].actor->setGlobalPose(physx::PxTransform(
+            mScene_.mEntityManager_.mPhysXRigidBodies[mSelectedEntityIndex_].actor->setGlobalPose(physx::PxTransform(
                 physx::PxVec3(entityPosition[0], entityPosition[1], entityPosition[2]),
                 physx::PxQuat(entityOrientation.x, entityOrientation.y, entityOrientation.z, entityOrientation.w)
             ));
@@ -122,6 +114,16 @@ void PhysXSceneGUI::controlSection() {
             //     glm::radians(entityRotation[1]),
             //     glm::radians(entityRotation[2])
             // });
+            // TODO convert to quat and assign to the entity
+            auto newOrientation = glm::quat(glm::vec3{
+                entityRotation[0],
+                entityRotation[1],
+                entityRotation[2]
+            });
+            mScene_.mEntityManager_.mPhysXRigidBodies[mSelectedEntityIndex_].actor->setGlobalPose(physx::PxTransform(
+                physx::PxVec3(entityPosition[0], entityPosition[1], entityPosition[2]),
+                physx::PxQuat(newOrientation.x, newOrientation.y, newOrientation.z, newOrientation.w)
+            ));
         }
 
         if (ImGui::SliderFloat3("Scale##Entity", entityScale, -10.f, 10.f, "%.2f")) {
@@ -145,7 +147,7 @@ void PhysXSceneGUI::controlSection() {
     static int current_item = 0;
 
     // list of items
-    const char* items[] = { "Sphere", "Cube", "Torus", "Plane" };
+    const char* items[] = { "Sphere", "Cube" };
     const int items_count = IM_ARRAYSIZE(items);
 
     // Label for combo
@@ -167,30 +169,9 @@ void PhysXSceneGUI::controlSection() {
     }
 
     if (ImGui::Button("Add Object")) {
-        mScene_.addEntity();
+        mScene_.addEntity(static_cast<PhysXScene::ObjectType>(current_item));
     }
     
-
 }
-
-
-/*
-
-entities:
-    1
-    2
-    3
-
-position
-scale
-orientation
-shape
-remove
-disable
-
-new object
-    shape[^]
-
-*/
 
 } // namespace physX_scene

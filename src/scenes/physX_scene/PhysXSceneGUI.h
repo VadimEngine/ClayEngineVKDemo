@@ -23,5 +23,6 @@ public:
     int mSelectedEntityIndex_ = 0;
     int mSelectedRenderableIndex_ = 0;
 
+    bool mShowColliders_ = false;
 };
 } // physX_scene
