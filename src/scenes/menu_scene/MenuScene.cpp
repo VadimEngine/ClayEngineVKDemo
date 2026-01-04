@@ -5,8 +5,9 @@
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/basic_scene/BasicScene.h"
 #include "scenes/scene2d/Scene2d.h"
-#include "scenes/physics_scene/PhysicsScene.h"
+#include "scenes/physX_scene/PhysXScene.h"
 #include "scenes/galaxy/GalaxyScene.h"
+#include "scenes/shader_tool/ShaderToolScene.h"
 #include "scenes/games/GamesScene.h"
 
 MenuScene::MenuScene(clay::BaseApp& app): clay::BaseScene(app) {}
@@ -33,11 +34,14 @@ void MenuScene::renderGUI(vk::CommandBuffer cmdBuffer) {
     if (ImGui::Button("Scene 2D")) {
         ((clay::AppDesktop&)mApp_).setScene(new Scene2d(mApp_));
     }
-    if (ImGui::Button("Physics Scene")) {
-        ((clay::AppDesktop&)mApp_).setScene(new physics_scene::PhysicsScene(mApp_));
+    if (ImGui::Button("PhysX Scene")) {
+        ((clay::AppDesktop&)mApp_).setScene(new physX_scene::PhysXScene(mApp_));
     }
     if (ImGui::Button("Galaxy")) {
         ((clay::AppDesktop&)mApp_).setScene(new galaxy::GalaxyScene(mApp_));
+    }
+    if (ImGui::Button("Shader Tool")) {
+        ((clay::AppDesktop&)mApp_).setScene(new shader_tool_scene::ShaderToolScene(mApp_));
     }
     if (ImGui::Button("Games")) {
         ((clay::AppDesktop&)mApp_).setScene(new GamesScene(mApp_));

@@ -1,5 +1,6 @@
 #include <clay/application/desktop/AppDesktop.h>
 #include "scenes/galaxy/PlanetEntity.h"
+#include "DemoApp.h"
 
 namespace galaxy {
 
@@ -8,10 +9,10 @@ PlanetEntity::PlanetEntity(clay::BaseScene& scene, clay::ecs::EntityManager& ent
     mEntityId_ = mEntityManager_.createEntity();
     clay::ecs::Transform transform;
     transform.mPosition_ = {mOrbitRadius_, 0.f, 0.f};
-    mEntityManager_.addTransform(mEntityId_, transform);
+    mEntityManager_.addComponent<clay::ecs::Transform>(mEntityId_, transform);
     clay::ecs::ModelRenderable modelRenderable;
     modelRenderable.mColor_ = {1,1,1,1};
-    modelRenderable.modelHandle = scene.getApp().getResources().getHandle<clay::Model>("Earth");
+    modelRenderable.modelHandle = ((DemoApp&)scene.getApp()).mAppProp.mModels.earth;
 
     // translation matrix
     glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), {0,0,0});
@@ -21,7 +22,7 @@ PlanetEntity::PlanetEntity(clay::BaseScene& scene, clay::ecs::EntityManager& ent
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), {mRadius_, mRadius_, mRadius_});
 
     modelRenderable.localModelMat = translationMat * rotationMat * scaleMat;
-    mEntityManager_.addModelRenderable(mEntityId_, modelRenderable);
+    mEntityManager_.addComponent<clay::ecs::ModelRenderable>(mEntityId_, modelRenderable);
 }
 
 PlanetEntity::~PlanetEntity() {

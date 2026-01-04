@@ -1,6 +1,7 @@
 
 #include <clay/application/desktop/AppDesktop.h>
 #include "scenes/galaxy/SunEntity.h"
+#include "DemoApp.h"
 
 namespace galaxy {
 
@@ -9,10 +10,10 @@ SunEntity::SunEntity(clay::BaseScene& scene, clay::ecs::EntityManager& entityMan
     mEntityId_ = mEntityManager_.createEntity();
     clay::ecs::Transform transform;
     transform.mPosition_ = {0.f, 0.f, 0.f};
-    mEntityManager_.addTransform(mEntityId_, transform);
+    mEntityManager_.addComponent<clay::ecs::Transform>(mEntityId_, transform);
     clay::ecs::ModelRenderable modelRenderable;
     modelRenderable.mColor_ = {1,1,1,1};
-    modelRenderable.modelHandle = scene.getApp().getResources().getHandle<clay::Model>("Sun");
+    modelRenderable.modelHandle = ((DemoApp&)scene.getApp()).mAppProp.mModels.sun;
 
     // translation matrix
     glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), {0,0,0});
@@ -22,7 +23,7 @@ SunEntity::SunEntity(clay::BaseScene& scene, clay::ecs::EntityManager& entityMan
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), {mRadius_, mRadius_, mRadius_});
 
     modelRenderable.localModelMat = translationMat * rotationMat * scaleMat;
-    mEntityManager_.addModelRenderable(mEntityId_, modelRenderable);
+    mEntityManager_.addComponent<clay::ecs::ModelRenderable>(mEntityId_, modelRenderable);
 }
 
 SunEntity::~SunEntity() {}

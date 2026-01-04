@@ -39,7 +39,11 @@ private:
     PlanetEntity* mPlanetEntity_ = nullptr;
     MoonEntity* mMoonEntity_ = nullptr;
 
-    clay::SkyBox* mSkyBox_;
+    // Camera rotation state
+    float mCameraYaw_ = 180.0f;      // Start looking in -Z direction
+    float mCameraPitch_ = -5.7f;     // Slight downward angle to look at origin
+    glm::vec2 mLastMousePos_ = {0.0f, 0.0f};
+    bool mIsFirstMouse_ = true;
 };
 
 } // namespace galaxy

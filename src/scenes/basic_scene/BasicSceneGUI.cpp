@@ -11,7 +11,9 @@
 namespace basic_scene {
 
 BasicSceneGUI::BasicSceneGUI(BasicScene& scene)
-    : mScene_(scene), mVSyncEnabled_(((clay::AppDesktop&)mScene_.getApp()).tempVSyncValue) {}
+    : mScene_(scene), mVSyncEnabled_(((clay::AppDesktop&)mScene_.getApp()).tempVSyncValue) {
+    mCameraMode_ = static_cast<int>(mScene_.getFocusCamera()->getMode());
+}
 
 BasicSceneGUI::~BasicSceneGUI() {}
 
@@ -48,11 +50,11 @@ void BasicSceneGUI::cameraSection() {
     ImGui::Text("Camera Mode");
 
     if (ImGui::RadioButton("Perspective", &mCameraMode_, 0)) {
-        //mScene_.getFocusCamera()->setMode(static_cast<clay::Camera::CameraMode>(mCameraMode_));
+        mScene_.getFocusCamera()->setMode(static_cast<clay::Camera::Mode>(mCameraMode_));
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("Orthogonal", &mCameraMode_, 1)) {
-        //mScene_.getFocusCamera()->setMode(static_cast<clay::Camera::CameraMode>(mCameraMode_));
+    if (ImGui::RadioButton("Orthographic", &mCameraMode_, 1)) {
+        mScene_.getFocusCamera()->setMode(static_cast<clay::Camera::Mode>(mCameraMode_));
     }
 
     ImGui::Text("Camera Movement");

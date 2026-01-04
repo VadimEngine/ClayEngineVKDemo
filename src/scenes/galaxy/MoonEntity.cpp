@@ -1,6 +1,7 @@
 
 #include <clay/application/desktop/AppDesktop.h>
 #include "scenes/galaxy/MoonEntity.h"
+#include "DemoApp.h"
 
 namespace galaxy {
 
@@ -9,10 +10,10 @@ MoonEntity::MoonEntity(clay::BaseScene& scene, clay::ecs::EntityManager& entityM
     mEntityId_ = mEntityManager_.createEntity();
     clay::ecs::Transform transform;
     transform.mPosition_ = {5 + mOrbitRadius_, 0.f, 0.f};
-    mEntityManager_.addTransform(mEntityId_, transform);
+    mEntityManager_.addComponent<clay::ecs::Transform>(mEntityId_, transform);
     clay::ecs::ModelRenderable modelRenderable;
     modelRenderable.mColor_ = {1,1,1,1};
-    modelRenderable.modelHandle = scene.getApp().getResources().getHandle<clay::Model>("Moon");
+    modelRenderable.modelHandle = ((DemoApp&)scene.getApp()).mAppProp.mModels.moon;
 
     // translation matrix
     glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), {0,0,0});
@@ -22,7 +23,7 @@ MoonEntity::MoonEntity(clay::BaseScene& scene, clay::ecs::EntityManager& entityM
     glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), {mRadius_, mRadius_, mRadius_});
 
     modelRenderable.localModelMat = translationMat * rotationMat * scaleMat;
-    mEntityManager_.addModelRenderable(mEntityId_, modelRenderable);
+    mEntityManager_.addComponent<clay::ecs::ModelRenderable>(mEntityId_, modelRenderable);
 }
 
 MoonEntity::~MoonEntity() {}
@@ -33,8 +34,7 @@ float MoonEntity::getRadius() const {
 
 void MoonEntity::setRadius(float radius) {
     mRadius_ = radius;
-    // TODO update renderable's local scale
-    // mEntityManager_.mModelRenderable[mEntityId_]. 
+    mEntityManager_.mTransforms[mEntityId_].mScale_ = {radius, radius, radius};
 }
 
 glm::vec4 MoonEntity::getColor() const {

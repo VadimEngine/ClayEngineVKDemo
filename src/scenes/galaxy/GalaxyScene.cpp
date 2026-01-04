@@ -1,11 +1,7 @@
-// third party
-// imgui
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
 // clay
 #include <clay/application/desktop/AppDesktop.h>
 // class
+#include "DemoApp.h"
 #include "scenes/menu_scene/MenuScene.h"
 #include "scenes/galaxy/GalaxyScene.h"
 
@@ -18,9 +14,9 @@ GalaxyScene::GalaxyScene(clay::BaseApp& app)
     getFocusCamera()->setPosition({0,1,10});
 
     // skybox
-    mSkyBox_ = new clay::SkyBox(
-        mApp_.getResources()[mApp_.getResources().getHandle<clay::Mesh>("Sphere")],
-        mApp_.getResources()[mApp_.getResources().getHandle<clay::Material>("Stars")]
+    mEntityManager_.setSkybox(
+        ((DemoApp&)mApp_).mAppProp.mMeshes.sphere,
+        ((DemoApp&)mApp_).mAppProp.mMaterials.stars
     );
 
     // sun
@@ -36,7 +32,52 @@ GalaxyScene::~GalaxyScene() {
 }
 
 void GalaxyScene::update(const float dt) {
-const clay::InputHandlerDesktop& inputHandler = (((clay::AppDesktop&)mApp_).getWindow().getInputHandler());
+    clay::InputHandlerDesktop& inputHandler = (((clay::AppDesktop&)mApp_).getWindow().getInputHandler());
+
+    // Camera orbit controls with right mouse button
+    if (inputHandler.isMouseButtonPressed(clay::InputHandlerDesktop::MouseEvent::Button::RIGHT)) {
+        glm::vec2 currentMousePos = inputHandler.getMousePosition();
+        
+        if (!mIsFirstMouse_) {
+            glm::vec2 mouseDelta = currentMousePos - mLastMousePos_;
+            
+            // Adjust sensitivity
+            float sensitivity = 0.3f;
+            mCameraYaw_ -= mouseDelta.x * sensitivity;
+            mCameraPitch_ -= mouseDelta.y * sensitivity;
+            
+            // Clamp pitch to prevent camera flipping
+            mCameraPitch_ = glm::clamp(mCameraPitch_, -89.0f, 89.0f);
+        }
+        
+        mLastMousePos_ = currentMousePos;
+        mIsFirstMouse_ = false;
+    } else {
+        mIsFirstMouse_ = true;
+    }
+
+    // Update camera orientation based on yaw and pitch
+    float yawRad = glm::radians(mCameraYaw_);
+    float pitchRad = glm::radians(mCameraPitch_);
+    
+    // Calculate camera's forward direction from yaw and pitch
+    glm::vec3 forward;
+    forward.x = cos(pitchRad) * sin(yawRad);
+    forward.y = sin(pitchRad);
+    forward.z = cos(pitchRad) * cos(yawRad);
+    forward = glm::normalize(forward);
+    
+    // Calculate right and up vectors
+    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    glm::vec3 up = glm::cross(right, forward);
+    
+    // Create rotation matrix and convert to quaternion
+    glm::mat3 rotationMatrix;
+    rotationMatrix[0] = right;
+    rotationMatrix[1] = up;
+    rotationMatrix[2] = -forward;
+    glm::quat orientation = glm::quat_cast(rotationMatrix);
+    mCamera_.setOrientation(orientation);
 
    if (inputHandler.isKeyPressed(GLFW_KEY_W)) {
        mCamera_.move(mCamera_.getForward(), mCamera_.getMoveSpeed() * dt);
@@ -74,7 +115,7 @@ const clay::InputHandlerDesktop& inputHandler = (((clay::AppDesktop&)mApp_).getW
    if (inputHandler.isKeyPressed(GLFW_KEY_E)) {
        mCamera_.rotate(mCamera_.getForward(), -200.0f * dt);
    }
-   // Speed
+   // Zoom
    if (inputHandler.isKeyPressed(GLFW_KEY_PERIOD)) {
        mCamera_.zoom(-mCamera_.getZoomSpeed() * dt);
    }
@@ -82,7 +123,10 @@ const clay::InputHandlerDesktop& inputHandler = (((clay::AppDesktop&)mApp_).getW
        mCamera_.zoom(mCamera_.getZoomSpeed() * dt);
    }
 
-    mSkyBox_->update(mpFocusCamera_->getOrientation(), dt);
+    // Update skybox
+    if (mEntityManager_.hasSkybox()) {
+        mEntityManager_.getSkybox()->update(mpFocusCamera_->getOrientation());
+    }
 
     glm::vec3 planetDiff;
     {
@@ -165,8 +209,6 @@ void GalaxyScene::render(vk::CommandBuffer cmdBuffer) {
             sizeof(CameraConstant)
         );
     }
-    // TODO move skybox logic to Entity component
-    mSkyBox_->render(cmdBuffer); // skybox should be drawn first
     mEntityManager_.render(cmdBuffer);
 
     renderGUI(cmdBuffer);

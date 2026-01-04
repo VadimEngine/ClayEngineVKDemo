@@ -33,6 +33,20 @@ void GalaxySceneGUI::render(vk::CommandBuffer cmdBuffer) {
         ((clay::AppDesktop&)mScene_.getApp()).tempVSyncValue= mVSyncEnabled_;
     }
     ImGui::Separator();
+    
+    // Camera information
+    ImGui::Text("Camera");
+    glm::vec3 camPos = mScene_.getFocusCamera()->getPosition();
+    ImGui::Text("Position: (%.2f, %.2f, %.2f)", camPos.x, camPos.y, camPos.z);
+    
+    glm::quat camOrient = mScene_.getFocusCamera()->getOrientation();
+    glm::vec3 euler = glm::eulerAngles(camOrient);
+    ImGui::Text("Orientation (deg):");
+    ImGui::Text("  Pitch: %.2f", glm::degrees(euler.x));
+    ImGui::Text("  Yaw: %.2f", glm::degrees(euler.y));
+    ImGui::Text("  Roll: %.2f", glm::degrees(euler.z));
+    
+    ImGui::Separator();
     ImGui::End();
 
     clay::ImGuiComponentDesktop::endRender(cmdBuffer);

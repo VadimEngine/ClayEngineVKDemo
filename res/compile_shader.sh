@@ -9,7 +9,7 @@ SHADER_SRC="$SCRIPT_DIR/shaders"
 SHADER_OUT="$SCRIPT_DIR/shaders"
 
 # List of shader base names
-SHADERS=("Flat" "Solid" "Text" "Texture" "Sprite")
+SHADERS=("Flat" "Solid" "Text" "Texture" "Sprite" "TilemapInstanced" "Animation")
 
 # Ensure output directory exists
 if [ ! -d "$SHADER_OUT" ]; then
