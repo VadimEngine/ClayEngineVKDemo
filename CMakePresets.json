@@ -1,0 +1,26 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "main",
+            "displayName": "Engine: main (Clay/ClayEngineVK)",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CLAY_ENGINE_DIR": "${sourceDir}/../ClayEngineVK"
+            }
+        },
+        {
+            "name": "dev",
+            "displayName": "Engine: dev (Clay/dev/ClayEngineVK)",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CLAY_ENGINE_DIR": "${sourceDir}/../dev/ClayEngineVK"
+            }
+        }
+    ]
+}
